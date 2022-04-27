@@ -1,11 +1,11 @@
 import ArgumentParser
 
-struct EveryIcon: ParsableCommand {
+struct NewIcon: ParsableCommand {
     static var configuration = CommandConfiguration(
-        commandName: "everyicon",
+        commandName: "new-icon",
         abstract: "macOS icon customization",
         subcommands: [TextCommand.self, ResetCommand.self]
     )
 }
 
-EveryIcon.main()
+NewIcon.main()
