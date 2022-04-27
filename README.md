@@ -24,4 +24,4 @@ $ mint install auramagi/NewIcon
   $ new-icon reset FILE
   ```
 
-Run `json5tojson --help` to see all options.
+Run `new-icon --help` to see all options.
