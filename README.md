@@ -21,7 +21,7 @@ $ mint install auramagi/NewIcon
 
 - Revert file or directory icon to the original
   ```sh
-  $ new-icon reset
+  $ new-icon reset FILE
   ```
 
 Run `json5tojson --help` to see all options.
