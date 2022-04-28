@@ -84,5 +84,6 @@ private struct IconTextView: View {
                     )
                     .alignmentGuide(VerticalAlignment.center) { $0.height / 2 - 184 }
             )
+            .environment(\.colorScheme, .dark)
     }
 }
