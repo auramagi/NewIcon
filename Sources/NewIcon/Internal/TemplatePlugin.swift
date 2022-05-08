@@ -5,19 +5,17 @@
 //  Created by Mikhail Apurin on 08.05.2022.
 //
 
-import Foundation
 import AppKit
+import Foundation
 
 struct TemplatePlugin {
     let temporaryDirectory: URL
     
     let package: URL
     
+    let templateFile: URL
+    
     init(fileURL: URL) throws {
-        guard FileManager.default.fileExists(atPath: fileURL.path) else {
-            throw "File does not exist at path \(fileURL.path)"
-        }
-        
         func template(_ name: String, renamedTo newName: String) throws -> FileWrapper {
             let wrapper = try Bundle.module.url(forResource: name, withExtension: "template")
                 .map { try FileWrapper(url: $0) }
@@ -53,6 +51,7 @@ struct TemplatePlugin {
         
         self.temporaryDirectory = temporaryDirectory
         self.package = package
+        self.templateFile = URL(fileURLWithPath: "Sources/Template/\(fileURL.lastPathComponent)", relativeTo: package)
     }
     
     func showInFinder() {

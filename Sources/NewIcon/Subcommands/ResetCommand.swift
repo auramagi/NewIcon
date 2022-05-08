@@ -16,16 +16,13 @@ struct ResetCommand: AsyncParsableCommand {
     )
     
     @Argument(
-        help: "Path to the file or directory.",
+        help: "Path to a file or directory.",
         completion: .file()
     )
     var path: String
     
     @MainActor func run() async throws {
-        let targetFilePath = FileManager.default.fileURL(resolvingRelativePath: path).path
-        guard FileManager.default.fileExists(atPath: targetFilePath) else {
-            throw "File does not exist at path \(targetFilePath)"
-        }
+        let targetFilePath = try FileManager.default.fileURL(resolvingRelativePath: path).path
         
         NSWorkspace.shared.setIcon(nil, forFile: targetFilePath)
     }

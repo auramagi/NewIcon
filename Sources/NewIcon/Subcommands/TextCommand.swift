@@ -17,7 +17,7 @@ struct TextCommand: AsyncParsableCommand {
     )
     
     @Argument(
-        help: "Path to the file or directory.",
+        help: "Path to a file or directory.",
         completion: .file()
     )
     var path: String
@@ -44,10 +44,7 @@ struct TextCommand: AsyncParsableCommand {
     var templateType: String?
     
     @MainActor func run() async throws {
-        let targetFilePath = FileManager.default.fileURL(resolvingRelativePath: path).path
-        guard FileManager.default.fileExists(atPath: targetFilePath) else {
-            throw "File does not exist at path \(targetFilePath)"
-        }
+        let targetFilePath = try FileManager.default.fileURL(resolvingRelativePath: path).path
         
         // Build template before resetting icon to the original
         let template = try await prepareTemplate()
@@ -94,7 +91,7 @@ struct TextCommand: AsyncParsableCommand {
     
     private func prepareTemplate() async throws -> Template {
         if let template = template {
-            let templateURL = FileManager.default.fileURL(resolvingRelativePath: template)
+            let templateURL = try FileManager.default.fileURL(resolvingRelativePath: template)
             return try await buildTemplate(fileURL: templateURL)
         } else {
             return .init(
