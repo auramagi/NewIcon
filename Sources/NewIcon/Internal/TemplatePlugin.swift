@@ -17,7 +17,7 @@ struct TemplatePlugin {
         func template(name: String, renamedTo newName: String) throws -> FileWrapper {
             let wrapper = try Bundle.module.url(forResource: name, withExtension: "template")
                 .map { try FileWrapper(url: $0) }
-                .unwrapOrThrow("Can't locate template resource: \(name)")
+                .unwrapOrThrow("Could not locate template resource: \(name)")
             wrapper.preferredFilename = newName
             return wrapper
         }
@@ -57,6 +57,14 @@ struct TemplatePlugin {
     
     func openInXcode() {
         Shell.execute(path: "xed", command: package.path, pipe: Pipe())
+    }
+    
+    func build() throws -> URL {
+        _ = try Shell.execute(path: "swift", command: "build -c release", currentDirectory: package) // TODO: print output as it comes out?
+        let binPath = try Shell.execute(path: "swift", command: "build -c release --show-bin-path", currentDirectory: package)
+            .unwrapOrThrow("Could not get package build bin path")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return URL(fileURLWithPath: binPath).appendingPathComponent("libTemplate.dylib")
     }
     
     func cleanUp() throws {
