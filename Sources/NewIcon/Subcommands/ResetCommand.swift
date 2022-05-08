@@ -22,10 +22,11 @@ struct ResetCommand: ParsableCommand {
     var path: String
     
     func run() throws {
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw "File does not exist"
+        let targetFilePath = FileManager.default.fileURL(resolvingRelativePath: path).path
+        guard FileManager.default.fileExists(atPath: targetFilePath) else {
+            throw "File does not exist at path \(targetFilePath)"
         }
         
-        NSWorkspace.shared.setIcon(nil, forFile: path)
+        NSWorkspace.shared.setIcon(nil, forFile: targetFilePath)
     }
 }

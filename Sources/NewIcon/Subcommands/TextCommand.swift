@@ -43,9 +43,10 @@ struct TextCommand: ParsableCommand {
     )
     var templateType: String?
     
-    func run() throws {        
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw "File does not exist at path \(path)"
+    func run() throws {
+        let targetFilePath = FileManager.default.fileURL(resolvingRelativePath: path).path
+        guard FileManager.default.fileExists(atPath: targetFilePath) else {
+            throw "File does not exist at path \(targetFilePath)"
         }
         
         // Build template before resetting icon to the original
@@ -53,11 +54,11 @@ struct TextCommand: ParsableCommand {
 
         // Cache old icon
         let workspace = NSWorkspace.shared
-        let oldIcon = workspace.icon(forFile: path)
+        let oldIcon = workspace.icon(forFile: targetFilePath)
         
         // Reset icon to the original
-        workspace.setIcon(nil, forFile: path)
-        let originalIcon = workspace.icon(forFile: path)
+        workspace.setIcon(nil, forFile: targetFilePath)
+        let originalIcon = workspace.icon(forFile: targetFilePath)
         
         do {
             // Pick the highest-quality image
@@ -75,10 +76,10 @@ struct TextCommand: ParsableCommand {
                 .asNSImage()
             
             // Set the new icon
-            workspace.setIcon(newIcon, forFile: path)
+            workspace.setIcon(newIcon, forFile: targetFilePath)
         } catch {
             // Failed to set the new icon, so return to the cached old one
-            workspace.setIcon(oldIcon, forFile: path)
+            workspace.setIcon(oldIcon, forFile: targetFilePath)
             
             // Clean up temporary folders if needed
             try? template.cleanUp()
@@ -93,7 +94,8 @@ struct TextCommand: ParsableCommand {
     
     private func prepareTemplate() throws -> Template {
         if let template = template {
-            return try buildTemplate(filePath: template)
+            let templateURL = FileManager.default.fileURL(resolvingRelativePath: template)
+            return try buildTemplate(fileURL: templateURL)
         } else {
             return .init(
                 render: { AnyView(IconTextView(image: $0, text: $1)) },
@@ -102,8 +104,8 @@ struct TextCommand: ParsableCommand {
         }
     }
     
-    private func buildTemplate(filePath: String) throws -> Template {
-        let plugin = try TemplatePlugin(filePath: filePath)
+    private func buildTemplate(fileURL: URL) throws -> Template {
+        let plugin = try TemplatePlugin(fileURL: fileURL)
         do {
             let pluginURL = try plugin.build()
             

@@ -13,9 +13,9 @@ struct TemplatePlugin {
     
     let package: URL
     
-    init(filePath: String) throws {
-        guard FileManager.default.fileExists(atPath: filePath) else {
-            throw "File does not exist at path \(filePath)"
+    init(fileURL: URL) throws {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            throw "File does not exist at path \(fileURL.path)"
         }
         
         func template(_ name: String, renamedTo newName: String) throws -> FileWrapper {
@@ -34,7 +34,7 @@ struct TemplatePlugin {
                 "Package.swift": try template("PluginTemplate/Template-Package-swift", renamedTo: "Package.swift"),
                 "Sources": FileWrapper(directoryWithFileWrappers: [
                     "Template": FileWrapper(directoryWithFileWrappers: [
-                        "Template.swift": try FileWrapper(url: URL(fileURLWithPath: filePath)),
+                        "Template.swift": try FileWrapper(url: fileURL),
                     ]),
                 ]),
                 "TemplateSupport": FileWrapper(directoryWithFileWrappers: [
