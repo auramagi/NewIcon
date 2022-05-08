@@ -39,32 +39,45 @@ struct TextCommand: ParsableCommand {
             throw "File does not exist at path \(path)"
         }
         
+        // Build template before resetting icon to the original
         let template = try prepareTemplate()
 
+        // Cache old icon
         let workspace = NSWorkspace.shared
-        
         let oldIcon = workspace.icon(forFile: path)
         
+        // Reset icon to the original
         workspace.setIcon(nil, forFile: path)
         let originalIcon = workspace.icon(forFile: path)
         
         do {
+            // Pick the highest-quality image
             let bestRepresentation = try originalIcon.bestRepresentation(for: .infinite, context: nil, hints: [:])
                 .unwrapOrThrow("Could not convert the original icon")
             
             let originalIcon = NSImage()
             originalIcon.addRepresentation(bestRepresentation)
             
+            // Render pre-built SwiftUI template
             let view = try template.render(originalIcon, text)
             let newIcon = try view
                 .frame(width: 1024, height: 1024)
                 .colorScheme(.light)
                 .asNSImage()
+            
+            // Set the new icon
             workspace.setIcon(newIcon, forFile: path)
+            
+            // Clean up temporary folders if needed
             try template.cleanUp()
         } catch {
+            // Failed to set the new icon, so return to the cached old one
             workspace.setIcon(oldIcon, forFile: path)
+            
+            // Clean up temporary folders if needed
             try? template.cleanUp()
+            
+            // Propagate error
             throw error
         }
     }
@@ -123,6 +136,8 @@ private extension TextCommand {
         let cleanUp: () throws -> Void
     }
 }
+
+// MARK: - Default template
 
 // Default template. Synced to PluginTemplate/Template-Template-swift.template
 private struct IconTextView: View {
