@@ -13,8 +13,12 @@ struct TemplatePlugin {
     
     let package: URL
     
-    init() throws {
-        func template(name: String, renamedTo newName: String) throws -> FileWrapper {
+    init(filePath: String) throws {
+        guard FileManager.default.fileExists(atPath: filePath) else {
+            throw "File does not exist at path \(filePath)"
+        }
+        
+        func template(_ name: String, renamedTo newName: String) throws -> FileWrapper {
             let wrapper = try Bundle.module.url(forResource: name, withExtension: "template")
                 .map { try FileWrapper(url: $0) }
                 .unwrapOrThrow("Could not locate template resource: \(name)")
@@ -27,17 +31,17 @@ struct TemplatePlugin {
         
         try FileWrapper(directoryWithFileWrappers: [
             "Template": FileWrapper(directoryWithFileWrappers: [
-                "Package.swift": try template(name: "PluginTemplate/Template-Package-swift", renamedTo: "Package.swift"),
+                "Package.swift": try template("PluginTemplate/Template-Package-swift", renamedTo: "Package.swift"),
                 "Sources": FileWrapper(directoryWithFileWrappers: [
                     "Template": FileWrapper(directoryWithFileWrappers: [
-                        "Template.swift": try template(name: "PluginTemplate/Template-Template-swift", renamedTo: "Template.swift"),
+                        "Template.swift": try FileWrapper(url: URL(fileURLWithPath: filePath)),
                     ]),
                 ]),
                 "TemplateSupport": FileWrapper(directoryWithFileWrappers: [
-                    "Package.swift": try template(name: "PluginTemplate/TemplateSupport-Package-swift", renamedTo: "Package.swift"),
+                    "Package.swift": try template("PluginTemplate/TemplateSupport-Package-swift", renamedTo: "Package.swift"),
                     "Sources": FileWrapper(directoryWithFileWrappers: [
                         "TemplateSupport": FileWrapper(directoryWithFileWrappers: [
-                            "TemplateSupport.swift": try template(name: "PluginTemplate/TemplateSupport-TemplateSupport-swift", renamedTo: "TemplateSupport.swift"),
+                            "TemplateSupport.swift": try template("PluginTemplate/TemplateSupport-TemplateSupport-swift", renamedTo: "TemplateSupport.swift"),
                         ]),
                     ]),
                 ]),

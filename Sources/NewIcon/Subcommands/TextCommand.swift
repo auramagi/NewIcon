@@ -93,7 +93,7 @@ struct TextCommand: ParsableCommand {
     
     private func prepareTemplate() throws -> Template {
         if let template = template {
-            return try buildTemplate()
+            return try buildTemplate(filePath: template)
         } else {
             return .init(
                 render: { AnyView(IconTextView(image: $0, text: $1)) },
@@ -102,8 +102,8 @@ struct TextCommand: ParsableCommand {
         }
     }
     
-    private func buildTemplate() throws -> Template {
-        let plugin = try TemplatePlugin()
+    private func buildTemplate(filePath: String) throws -> Template {
+        let plugin = try TemplatePlugin(filePath: filePath)
         do {
             let pluginURL = try plugin.build()
             
