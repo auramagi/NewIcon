@@ -1,0 +1,68 @@
+import SwiftUI
+import UniformTypeIdentifiers
+
+enum PreviewData {
+    enum Icon {
+        case bestRepresentation(ofType: UTType)
+        
+        var image: NSImage {
+            switch self {
+            case let .bestRepresentation(type):
+                let sampleIcon = NSWorkspace.shared.icon(for: type)
+                guard let bestRepresentation = sampleIcon.bestRepresentation(for: .infinite, context: nil, hints: [:]) else {
+                    return sampleIcon
+                }
+                
+                let result = NSImage()
+                result.addRepresentation(bestRepresentation)
+                return result
+            }
+        }
+        
+        static var appIcon: Self { .bestRepresentation(ofType: .applicationBundle) }
+        
+        static var folder: Self { .bestRepresentation(ofType: .folder) }
+    }
+    
+    static let text = "Hello world"
+}
+
+public protocol _IconTextTemplateView {
+    init(image: NSImage, text: String)
+    
+    var asAnyView: AnyView { get }
+}
+
+public protocol IconTextTemplateView: View, _IconTextTemplateView { }
+
+public extension IconTextTemplateView {
+    internal static func makePreview(icon: PreviewData.Icon) -> Self {
+        .init(image: icon.image, text: PreviewData.text)
+    }
+    
+    var asAnyView: AnyView {
+        AnyView(self)
+    }
+}
+
+public extension IconTextTemplateView where Self: PreviewProvider {
+    static var previews: some View {
+        Group {
+            makePreview(icon: .appIcon)
+                .previewDisplayName("App icon")
+            
+            makePreview(icon: .folder)
+                .previewDisplayName("Folder")
+        }
+        .frame(width: 1024, height: 1024)
+        .colorScheme(.light)
+        .previewLayout(.sizeThatFits)
+    }
+}
+
+@_cdecl("makeTemplate")
+public func makeTemplate(type: Any, image: NSImage, text: String) -> UnsafeRawPointer {
+    let resolvedType = type as! _IconTextTemplateView.Type
+    let view = resolvedType.init(image: image, text: text).asAnyView
+    return unsafeBitCast(view, to: UnsafeRawPointer.self)
+}
