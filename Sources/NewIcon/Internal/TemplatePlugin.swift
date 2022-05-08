@@ -59,15 +59,52 @@ struct TemplatePlugin {
         Shell.execute(path: "xed", command: package.path, pipe: Pipe())
     }
     
-    func build() throws -> URL {
-        _ = try Shell.execute(path: "swift", command: "build -c release", currentDirectory: package) // TODO: print output as it comes out?
+    func build() throws -> TemplateImage {
+        // Build with release configuration but set -Onone optimization so that the non-public types don't get stripped as dead code
+        print(try Shell.execute(path: "swift", command: "build -c release -Xswiftc -Onone", currentDirectory: package)) // TODO: print output as it comes out?
         let binPath = try Shell.execute(path: "swift", command: "build -c release --show-bin-path", currentDirectory: package)
             .unwrapOrThrow("Could not get package build bin path")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return URL(fileURLWithPath: binPath).appendingPathComponent("libTemplate.dylib")
+        return .init(url: URL(fileURLWithPath: binPath).appendingPathComponent("libTemplate.dylib"))
     }
     
     func cleanUp() throws {
         try FileManager.default.removeItem(at: temporaryDirectory)
+    }
+}
+
+struct TemplateImage {
+    let url: URL
+    
+    func open<RenderTemplate>(
+        isTemplateSymbol: String,
+        renderTemplateSymbol: String,
+        renderTemplateType: RenderTemplate.Type
+    ) throws -> (types: [Any.Type], renderTemplate: RenderTemplate) {
+        guard let pluginHandle = dlopen(url.path, RTLD_NOW) else {
+            if let error = dlerror() {
+                throw "dlopen error: \(String(cString: error))"
+            } else {
+                throw "Unknown dlopen error"
+            }
+        }
+        
+        typealias IsTemplate = @convention(c) (Any) -> Bool
+        let isTemplate = try dlsym(pluginHandle, isTemplateSymbol)
+            .map { unsafeBitCast($0, to: (IsTemplate).self) }
+            .unwrapOrThrow("Plugin doesn't contain the \(isTemplateSymbol) entry point from TemplateSupport")
+        
+        let renderTemplate = try dlsym(pluginHandle, renderTemplateSymbol)
+            .map { unsafeBitCast($0, to: (RenderTemplate).self) }
+            .unwrapOrThrow("Plugin doesn't contain the \(renderTemplateSymbol) entry point from TemplateSupport")
+        
+        let templateTypes: [Any.Type] = try MachImage(name: url.path)
+            .unwrapOrThrow("Did not find plugin image after dlopen")
+            .symbols
+            .filter { $0.name.hasSuffix("VN") } // is struct type metadata? (see: https://github.com/apple/swift/blob/main/docs/ABI/Mangling.rst)
+            .map { unsafeBitCast($0.address, to: Any.Type.self) }
+            .filter(isTemplate)
+        
+        return (templateTypes, renderTemplate)
     }
 }

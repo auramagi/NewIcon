@@ -29,10 +29,19 @@ struct TextCommand: ParsableCommand {
     
     @Option(
         name: .shortAndLong,
-        help: "Path to template file",
+        help: "Path to template file.",
         completion: .file()
     )
     var template: String?
+    
+    @Option(
+        name: .long,
+        help: ArgumentHelp(
+            "Struct type to use.",
+            discussion: "If a template file contains several possible template types, this option specifies which one to use."
+        )
+    )
+    var templateType: String?
     
     func run() throws {        
         guard FileManager.default.fileExists(atPath: path) else {
@@ -67,9 +76,6 @@ struct TextCommand: ParsableCommand {
             
             // Set the new icon
             workspace.setIcon(newIcon, forFile: path)
-            
-            // Clean up temporary folders if needed
-            try template.cleanUp()
         } catch {
             // Failed to set the new icon, so return to the cached old one
             workspace.setIcon(oldIcon, forFile: path)
@@ -80,6 +86,9 @@ struct TextCommand: ParsableCommand {
             // Propagate error
             throw error
         }
+        
+        // Clean up temporary folders if needed
+        try template.cleanUp()
     }
     
     private func prepareTemplate() throws -> Template {
@@ -97,26 +106,32 @@ struct TextCommand: ParsableCommand {
         let plugin = try TemplatePlugin()
         do {
             let pluginURL = try plugin.build()
-            guard let pluginHandle = dlopen(pluginURL.path, RTLD_NOW) else {
-                if let error = dlerror() {
-                    throw "dlopen error: \(String(cString: error))"
+            
+            typealias RenderTemplate = @convention(c) (Any, NSImage, String) -> Any
+            let (templateTypes, renderTemplate) = try pluginURL.open(
+                isTemplateSymbol: "isTemplate",
+                renderTemplateSymbol: "renderTemplate",
+                renderTemplateType: RenderTemplate.self
+            )
+            
+            let type: Any.Type = try {
+                if let templateType = templateType {
+                    return try templateTypes
+                        .first { "\($0)" == templateType }
+                        .unwrapOrThrow("Did not find the type specified with the --template-type option: \(templateType)")
+                    
+                } else if templateTypes.count > 1 {
+                    throw "Template contains multiple template types, choose which one to use with the --template-type option. Available types: \(templateTypes.map { "\($0)" })"
+                } else if let type = templateTypes.first {
+                    return type
                 } else {
-                    throw "Unknown dlopen error"
+                    throw "Plugin doesn't contain a template struct"
                 }
-            }
-            
-            let type = try dlsym(pluginHandle, "$s8Template12IconTextViewVN")
-                .map { unsafeBitCast($0, to: Any.Type.self) }
-                .unwrapOrThrow("Plugin doesn't contain a template struct")
-            
-            typealias MakeTemplate = @convention(c) (Any, NSImage, String) -> Any
-            let renderTemplate = try dlsym(pluginHandle, "renderTemplate")
-                .map { unsafeBitCast($0, to: (MakeTemplate).self) }
-                .unwrapOrThrow("Plugin doesn't contain the makeTemplate entry point from TemplateSupport")
+            }()
             
             return .init(
-                render: { i, _ in
-                    try (renderTemplate(type, i, "YEE") as? AnyView)
+                render: {
+                    try (renderTemplate(type, $0, $1) as? AnyView)
                         .unwrapOrThrow("Could not generate SwiftUI view from plugin")
                 },
                 cleanUp: {

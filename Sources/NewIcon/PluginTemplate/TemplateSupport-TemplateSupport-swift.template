@@ -60,9 +60,13 @@ public extension IconTextTemplateView where Self: PreviewProvider {
     }
 }
 
+@_cdecl("isTemplate")
+public func isTemplate(type: Any) -> Bool {
+    type as? _IconTextTemplateView.Type != nil
+}
+
 @_cdecl("renderTemplate")
 public func renderTemplate(type: Any, image: NSImage, text: String) -> Any {
-    let resolvedType = type as! _IconTextTemplateView.Type
-    let view = resolvedType.init(image: image, text: text).asAnyView
-    return view
+    let resolvedType = type as? _IconTextTemplateView.Type
+    return resolvedType?.init(image: image, text: text).asAnyView as Any
 }
