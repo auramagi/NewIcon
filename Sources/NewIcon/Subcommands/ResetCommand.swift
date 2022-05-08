@@ -9,7 +9,7 @@ import AppKit
 import ArgumentParser
 import Foundation
 
-struct ResetCommand: ParsableCommand {
+struct ResetCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "reset",
         abstract: "Revert to the original icon."
@@ -21,7 +21,7 @@ struct ResetCommand: ParsableCommand {
     )
     var path: String
     
-    func run() throws {
+    @MainActor func run() async throws {
         let targetFilePath = FileManager.default.fileURL(resolvingRelativePath: path).path
         guard FileManager.default.fileExists(atPath: targetFilePath) else {
             throw "File does not exist at path \(targetFilePath)"

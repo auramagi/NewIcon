@@ -59,14 +59,14 @@ struct TemplatePlugin {
         NSWorkspace.shared.selectFile(package.path, inFileViewerRootedAtPath: "")
     }
     
-    func openInXcode() {
-        Shell.execute(path: "xed", command: package.path, pipe: Pipe())
+    func openInXcode() throws {
+        try Shell.executeSync("xed \(package.path)")
     }
     
-    func build() throws -> TemplateImage {
+    func build() async throws -> TemplateImage {
         // Build with release configuration but set -Onone optimization so that the non-public types don't get stripped as dead code
-        print(try Shell.execute(path: "swift", command: "build -c release -Xswiftc -Onone", currentDirectory: package)) // TODO: print output as it comes out?
-        let binPath = try Shell.execute(path: "swift", command: "build -c release --show-bin-path", currentDirectory: package)
+        await Shell.executeWithStandardOutput("swift build -c release -Xswiftc -Onone", currentDirectory: package)
+        let binPath = try Shell.executeSync("swift build -c release --show-bin-path", currentDirectory: package)
             .unwrapOrThrow("Could not get package build bin path")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return .init(url: URL(fileURLWithPath: binPath).appendingPathComponent("libTemplate.dylib"))

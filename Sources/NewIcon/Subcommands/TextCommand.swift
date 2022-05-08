@@ -10,7 +10,7 @@ import ArgumentParser
 import Foundation
 import SwiftUI
 
-struct TextCommand: ParsableCommand {
+struct TextCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "text",
         abstract: "Overlay text over the original icon."
@@ -43,14 +43,14 @@ struct TextCommand: ParsableCommand {
     )
     var templateType: String?
     
-    func run() throws {
+    @MainActor func run() async throws {
         let targetFilePath = FileManager.default.fileURL(resolvingRelativePath: path).path
         guard FileManager.default.fileExists(atPath: targetFilePath) else {
             throw "File does not exist at path \(targetFilePath)"
         }
         
         // Build template before resetting icon to the original
-        let template = try prepareTemplate()
+        let template = try await prepareTemplate()
 
         // Cache old icon
         let workspace = NSWorkspace.shared
@@ -92,10 +92,10 @@ struct TextCommand: ParsableCommand {
         try template.cleanUp()
     }
     
-    private func prepareTemplate() throws -> Template {
+    private func prepareTemplate() async throws -> Template {
         if let template = template {
             let templateURL = FileManager.default.fileURL(resolvingRelativePath: template)
-            return try buildTemplate(fileURL: templateURL)
+            return try await buildTemplate(fileURL: templateURL)
         } else {
             return .init(
                 render: { AnyView(IconTextView(image: $0, text: $1)) },
@@ -104,13 +104,13 @@ struct TextCommand: ParsableCommand {
         }
     }
     
-    private func buildTemplate(fileURL: URL) throws -> Template {
+    private func buildTemplate(fileURL: URL) async throws -> Template {
         let plugin = try TemplatePlugin(fileURL: fileURL)
         do {
-            let pluginURL = try plugin.build()
+            let templateImage = try await plugin.build()
             
             typealias RenderTemplate = @convention(c) (Any, NSImage, String) -> Any
-            let (templateTypes, renderTemplate) = try pluginURL.open(
+            let (templateTypes, renderTemplate) = try templateImage.open(
                 isTemplateSymbol: "isTemplate",
                 renderTemplateSymbol: "renderTemplate",
                 renderTemplateType: RenderTemplate.self
