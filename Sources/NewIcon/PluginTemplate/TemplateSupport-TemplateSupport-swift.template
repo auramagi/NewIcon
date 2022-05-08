@@ -60,9 +60,9 @@ public extension IconTextTemplateView where Self: PreviewProvider {
     }
 }
 
-@_cdecl("makeTemplate")
-public func makeTemplate(type: Any, image: NSImage, text: String) -> UnsafeRawPointer {
+@_cdecl("renderTemplate")
+public func renderTemplate(type: Any, image: NSImage, text: String) -> Any {
     let resolvedType = type as! _IconTextTemplateView.Type
     let view = resolvedType.init(image: image, text: text).asAnyView
-    return unsafeBitCast(view, to: UnsafeRawPointer.self)
+    return view
 }

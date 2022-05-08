@@ -1,19 +1,24 @@
 import SwiftUI
 import TemplateSupport
 
-struct IconTextView: IconTextTemplateView, PreviewProvider {
+public struct IconTextView: IconTextTemplateView, PreviewProvider {
     let image: NSImage
 
     let text: String
+    
+    public init(image: NSImage, text: String) {
+        self.image = image
+        self.text = text
+    }
 
     // Expect size to be 1024x1024
-    var body: some View {
+    public var body: some View {
         Image(nsImage: image)
             .resizable()
             .overlay(
                 Text(text)
                     .font(.system(size: 160, weight: .bold, design: .rounded))
-                    .foregroundColor(Color.white.opacity(0.85))
+                    .colorScheme(.dark)
                     .minimumScaleFactor(0.1)
                     .multilineTextAlignment(.center)
                     .frame(width: 612)
