@@ -18,12 +18,14 @@ enum Shell {
         currentDirectory: URL? = nil,
         environment: [String: String] = [:],
         terminationHandler: @escaping (Process) -> Void = { _ in }
-    ) -> Process {
+    ) throws -> Process {
         let uuid = UUID()
         let shellPath = ProcessInfo().environment["SHELL"]
         let process = Process()
+        
         subprocesses[uuid] = process
         
+        process.qualityOfService = .userInitiated
         if let currentDirectory = currentDirectory {
             process.currentDirectoryURL = currentDirectory
         }
@@ -41,7 +43,7 @@ enum Shell {
         process.standardOutput = output
         process.standardError = error
         
-        process.launch()
+        try process.run()
         
         return process
     }
@@ -53,7 +55,7 @@ enum Shell {
         environment: [String: String] = [:]
     ) throws -> String? {
         let outputPipe = Pipe()
-        execute(command, output: outputPipe, currentDirectory: currentDirectory, environment: environment)
+        try execute(command, output: outputPipe, currentDirectory: currentDirectory, environment: environment)
         return try outputPipe.fileHandleForReading
             .readToEnd()
             .flatMap { String(data: $0, encoding: .utf8) }
@@ -81,7 +83,11 @@ enum Shell {
                 error = (error ?? "").appending(output)
             }
             
-            execute(command, output: outputPipe, error: errorPipe, currentDirectory: currentDirectory, environment: environment) { _ in
+            do {
+                try execute(command, output: outputPipe, error: errorPipe, currentDirectory: currentDirectory, environment: environment) { _ in
+                    continuation.finish(throwing: error)
+                }
+            } catch {
                 continuation.finish(throwing: error)
             }
         }
@@ -91,16 +97,20 @@ enum Shell {
         _ command: String,
         currentDirectory: URL? = nil,
         environment: [String: String] = [:]
-    ) async {
-        await withUnsafeContinuation { continuation in
-            execute(
-                command,
-                output: FileHandle.standardOutput,
-                error: FileHandle.standardError,
-                currentDirectory: currentDirectory,
-                environment: environment,
-                terminationHandler: { _ in continuation.resume() }
-            )
+    ) async throws {
+        try await withUnsafeThrowingContinuation { (continuation: UnsafeContinuation<Void, Error>) in
+            do {
+                try execute(
+                    command,
+                    output: FileHandle.standardOutput,
+                    error: FileHandle.standardError,
+                    currentDirectory: currentDirectory,
+                    environment: environment,
+                    terminationHandler: { _ in continuation.resume() }
+                )
+            } catch {
+                continuation.resume(throwing: error)
+            }
         }
     }
 }

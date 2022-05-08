@@ -65,7 +65,7 @@ struct TemplatePlugin {
     
     func build() async throws -> TemplateImage {
         // Build with release configuration but set -Onone optimization so that the non-public types don't get stripped as dead code
-        await Shell.executeWithStandardOutput("swift build -c release -Xswiftc -Onone", currentDirectory: package)
+        try await Shell.executeWithStandardOutput("swift build -c release -Xswiftc -Onone", currentDirectory: package)
         let binPath = try Shell.executeSync("swift build -c release --show-bin-path", currentDirectory: package)
             .unwrapOrThrow("Could not get package build bin path")
             .trimmingCharacters(in: .whitespacesAndNewlines)
