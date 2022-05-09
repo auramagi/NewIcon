@@ -14,7 +14,7 @@ struct Icon {
     
     let image: NSImage
     
-    let cleanUp: () throws -> Void
+    let cleanUp: () -> Void
     
     static let workspace: NSWorkspace = .shared
     

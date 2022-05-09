@@ -11,17 +11,31 @@ import SwiftUI
 struct Template<Input> {
     let render: (Input) throws -> AnyView
     
-    let cleanUp: () throws -> Void
+    let cleanUp: () -> Void
 }
 
 extension Template {
-    static func build(
-        isTemplateSymbol: String,
-        renderTemplateSymbol: String,
-        inputType: Input.Type,
-        fileURL: URL,
-        templateType: String?
-    ) async throws -> Template<Input> {
+    struct Builder {
+        let isTemplateSymbol: String
+        let renderTemplateSymbol: String
+        let renderTemplateInputType: Input.Type
+        let defaultTemplate: (Input) -> AnyView
+    }
+}
+
+extension Template.Builder {
+    func build(fileURL: URL?, templateType: String?) async throws -> Template<Input> {
+        if let fileURL = fileURL {
+            return try await build(fileURL: fileURL, templateType: templateType)
+        } else {
+            return .init(
+                render: { defaultTemplate($0) },
+                cleanUp: { }
+            )
+        }
+    }
+    
+    private func build(fileURL: URL, templateType: String?) async throws -> Template<Input> {
         let plugin = try TemplatePlugin(fileURL: fileURL)
         do {
             let templateImage = try await plugin.build()
@@ -54,7 +68,11 @@ extension Template {
                         .unwrapOrThrow("Could not generate SwiftUI view from plugin")
                 },
                 cleanUp: {
-                    try plugin.cleanUp()
+                    do {
+                        try plugin.cleanUp()
+                    } catch {
+                        print("Warning: Error while cleaning up plugin folder.", error)
+                    }
                 }
             )
         } catch {

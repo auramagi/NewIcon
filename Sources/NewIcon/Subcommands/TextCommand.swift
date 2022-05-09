@@ -50,40 +50,29 @@ struct TextCommand: AsyncParsableCommand {
     )
     var templateType: String?
     
+    private static var builder = Template.Builder(
+        isTemplateSymbol: "isTemplate",
+        renderTemplateSymbol: "renderTemplate",
+        renderTemplateInputType: (NSImage, String).self,
+        defaultTemplate: { AnyView(IconTextView(image: $0.0, text: $0.1)) }
+    )
+    
     @MainActor func run() async throws {
         let fm = FileManager.default
         
-        let template = try await prepareTemplate() // Build template before resetting icon to the original
+        // Build template before resetting icon to the original
+        let template = try await Self.builder.build(
+            fileURL: template.map { try fm.fileURL(resolvingRelativePath: $0) },
+            templateType: templateType
+        )
+        defer { template.cleanUp() }
+        
         let icon = try Icon.load(
             target:  try fm.fileURL(resolvingRelativePath: path),
             imageURL: image.map { try fm.fileURL(resolvingRelativePath: $0) }
         )
+        defer { icon.cleanUp() }
         
-        var error: Error? // Collate errors since we want clean up to always run
-        error.catching { try applyTemplate(template, to: icon) }
-        error.catching { try icon.cleanUp() }
-        error.catching { try template.cleanUp() }
-        try error.throwIfPresent()
-    }
-    
-    private func prepareTemplate() async throws -> Template<(NSImage, String)> {
-        if let template = template {
-            return try await .build(
-                isTemplateSymbol: "isTemplate",
-                renderTemplateSymbol: "renderTemplate",
-                inputType: (NSImage, String).self,
-                fileURL: try FileManager.default.fileURL(resolvingRelativePath: template),
-                templateType: templateType
-            )
-        } else {
-            return .init(
-                render: { AnyView(IconTextView(image: $0, text: $1)) },
-                cleanUp: { }
-            )
-        }
-    }
-    
-    private func applyTemplate(_ template: Template<(NSImage, String)>, to icon: Icon) throws {
         let renderedTemplate = try template.render((icon.image, text))
         try icon.replace(with: renderedTemplate)
     }
