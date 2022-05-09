@@ -18,3 +18,19 @@ extension Optional {
         }
     }
 }
+
+extension Optional where Wrapped == Error {
+    mutating func catching(keepingFirst: Bool = true, _ block: () throws -> Void) {
+        do {
+            try block()
+        } catch {
+            guard !keepingFirst || self == nil else { return }
+            self = error
+        }
+    }
+    
+    func throwIfPresent() throws {
+        guard let error = self else { return }
+        throw error
+    }
+}

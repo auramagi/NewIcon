@@ -29,6 +29,13 @@ struct TextCommand: AsyncParsableCommand {
     
     @Option(
         name: .shortAndLong,
+        help: "An image to use instead of extracting the original icon.",
+        completion: .file()
+    )
+    var image: String?
+    
+    @Option(
+        name: .shortAndLong,
         help: "Path to template file.",
         completion: .file()
     )
@@ -44,49 +51,19 @@ struct TextCommand: AsyncParsableCommand {
     var templateType: String?
     
     @MainActor func run() async throws {
-        let targetFilePath = try FileManager.default.fileURL(resolvingRelativePath: path).path
+        let fm = FileManager.default
         
-        // Build template before resetting icon to the original
-        let template = try await prepareTemplate()
-
-        // Cache old icon
-        let workspace = NSWorkspace.shared
-        let oldIcon = workspace.icon(forFile: targetFilePath)
+        let template = try await prepareTemplate() // Build template before resetting icon to the original
+        let icon = try Icon.load(
+            target:  try fm.fileURL(resolvingRelativePath: path),
+            imageURL: image.map { try fm.fileURL(resolvingRelativePath: $0) }
+        )
         
-        // Reset icon to the original
-        workspace.setIcon(nil, forFile: targetFilePath)
-        let originalIcon = workspace.icon(forFile: targetFilePath)
-        
-        do {
-            // Pick the highest-quality image
-            let bestRepresentation = try originalIcon.bestRepresentation(for: .infinite, context: nil, hints: [:])
-                .unwrapOrThrow("Could not convert the original icon")
-            
-            let originalIcon = NSImage()
-            originalIcon.addRepresentation(bestRepresentation)
-            
-            // Render pre-built SwiftUI template
-            let view = try template.render(originalIcon, text)
-            let newIcon = try view
-                .frame(width: 1024, height: 1024)
-                .colorScheme(.light)
-                .asNSImage()
-            
-            // Set the new icon
-            workspace.setIcon(newIcon, forFile: targetFilePath)
-        } catch {
-            // Failed to set the new icon, so return to the cached old one
-            workspace.setIcon(oldIcon, forFile: targetFilePath)
-            
-            // Clean up temporary folders if needed
-            try? template.cleanUp()
-            
-            // Propagate error
-            throw error
-        }
-        
-        // Clean up temporary folders if needed
-        try template.cleanUp()
+        var error: Error? // Collate errors since we want clean up to always run
+        error.catching { try applyTemplate(template, to: icon) }
+        error.catching { try icon.cleanUp() }
+        error.catching { try template.cleanUp() }
+        try error.throwIfPresent()
     }
     
     private func prepareTemplate() async throws -> Template {
@@ -142,6 +119,11 @@ struct TextCommand: AsyncParsableCommand {
             throw error
         }
     }
+    
+    private func applyTemplate(_ template: Template, to icon: Icon) throws {
+        let renderedTemplate = try template.render(icon.image, text)
+        try icon.replace(with: renderedTemplate)
+    }
 }
 
 private extension TextCommand {
@@ -163,6 +145,7 @@ private struct IconTextView: View {
     var body: some View {
         Image(nsImage: image)
             .resizable()
+            .scaledToFit()
             .overlay(
                 Text(text)
                     .font(.system(size: 160, weight: .bold, design: .rounded))

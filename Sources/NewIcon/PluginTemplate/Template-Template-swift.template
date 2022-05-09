@@ -10,6 +10,7 @@ struct IconTextView: IconTextTemplateView, PreviewProvider {
     var body: some View {
         Image(nsImage: image)
             .resizable()
+            .scaledToFit()
             .overlay(
                 Text(text)
                     .font(.system(size: 160, weight: .bold, design: .rounded))

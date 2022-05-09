@@ -31,7 +31,7 @@ struct EditCommand: AsyncParsableCommand {
         // Monitor for changes
         let folderDescriptor = open(plugin.templateFile.deletingLastPathComponent().path, O_EVTONLY)
         let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: folderDescriptor, eventMask: .write)
-        source.setEventHandler {  saveChanges(original: fileURL, temporary: plugin.templateFile) }
+        source.setEventHandler { saveChanges(original: fileURL, temporary: plugin.templateFile) }
         source.setCancelHandler { close(folderDescriptor) }
         source.resume()
         
