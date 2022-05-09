@@ -58,18 +58,15 @@ struct TextCommand: AsyncParsableCommand {
     )
     
     @MainActor func run() async throws {
-        let fm = FileManager.default
-        
-        // Build template before resetting icon to the original
         let template = try await Self.builder.build(
-            fileURL: template.map { try fm.fileURL(resolvingRelativePath: $0) },
+            fileURL: try template?.resolvedAsRelativePath,
             templateType: templateType
         )
         defer { template.cleanUp() }
         
         let icon = try Icon.load(
-            target:  try fm.fileURL(resolvingRelativePath: path),
-            imageURL: image.map { try fm.fileURL(resolvingRelativePath: $0) }
+            target:  try path.resolvedAsRelativePath,
+            imageURL: try image?.resolvedAsRelativePath
         )
         defer { icon.cleanUp() }
         

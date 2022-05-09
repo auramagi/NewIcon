@@ -22,7 +22,7 @@ struct ResetCommand: AsyncParsableCommand {
     var path: String
     
     @MainActor func run() async throws {
-        let targetFilePath = try FileManager.default.fileURL(resolvingRelativePath: path).path
+        let targetFilePath = try path.resolvedAsRelativePath.path
         
         NSWorkspace.shared.setIcon(nil, forFile: targetFilePath)
     }
