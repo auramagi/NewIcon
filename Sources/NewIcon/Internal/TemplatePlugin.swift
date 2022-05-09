@@ -16,8 +16,10 @@ struct TemplatePlugin {
     let templateFile: URL
     
     init(fileURL: URL) throws {
+        let bundle = try Bundle.locateResourcesBundle()
+        
         func template(_ name: String, renamedTo newName: String) throws -> FileWrapper {
-            let wrapper = try Bundle.module.url(forResource: name, withExtension: "template")
+            let wrapper = try bundle.url(forResource: name, withExtension: "template")
                 .map { try FileWrapper(url: $0) }
                 .unwrapOrThrow("Could not locate template resource: \(name)")
             wrapper.preferredFilename = newName
