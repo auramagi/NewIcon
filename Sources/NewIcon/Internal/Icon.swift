@@ -5,8 +5,8 @@
 //  Created by Mikhail Apurin on 10.05.2022.
 //
 
-import Foundation
 import AppKit
+import Foundation
 import SwiftUI
 
 struct Icon {
@@ -22,13 +22,17 @@ struct Icon {
         Self.workspace.setIcon(newImage, forFile: target.path)
     }
     
-    func replace(with renderedTemplate: AnyView) throws {
+    func apply(_ renderedTemplate: AnyView, to output: URL?) throws {
         let newImage = try renderedTemplate
             .frame(width: 1024, height: 1024)
             .colorScheme(.light)
             .asNSImage()
         
-        replace(with: newImage)
+        if let output = output {
+            try newImage.write(to: output)
+        } else {
+            replace(with: newImage)
+        }
     }
 }
 

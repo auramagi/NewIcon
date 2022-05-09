@@ -50,6 +50,13 @@ struct TextCommand: AsyncParsableCommand {
     )
     var templateType: String?
     
+    @Option(
+        name: .shortAndLong,
+        help: "Path to write out the resulting image instead of changing the icon.",
+        completion: .file()
+    )
+    var output: String?
+    
     private static var builder = Template.Builder(
         isTemplateSymbol: "isTemplate",
         renderTemplateSymbol: "renderTemplate",
@@ -71,7 +78,7 @@ struct TextCommand: AsyncParsableCommand {
         defer { icon.cleanUp() }
         
         let renderedTemplate = try template.render((icon.image, text))
-        try icon.replace(with: renderedTemplate)
+        try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
     }
 }
 
