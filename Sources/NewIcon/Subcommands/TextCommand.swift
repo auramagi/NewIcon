@@ -66,10 +66,15 @@ struct TextCommand: AsyncParsableCommand {
         try error.throwIfPresent()
     }
     
-    private func prepareTemplate() async throws -> Template {
+    private func prepareTemplate() async throws -> Template<(NSImage, String)> {
         if let template = template {
-            let templateURL = try FileManager.default.fileURL(resolvingRelativePath: template)
-            return try await buildTemplate(fileURL: templateURL)
+            return try await .build(
+                isTemplateSymbol: "isTemplate",
+                renderTemplateSymbol: "renderTemplate",
+                inputType: (NSImage, String).self,
+                fileURL: try FileManager.default.fileURL(resolvingRelativePath: template),
+                templateType: templateType
+            )
         } else {
             return .init(
                 render: { AnyView(IconTextView(image: $0, text: $1)) },
@@ -78,58 +83,9 @@ struct TextCommand: AsyncParsableCommand {
         }
     }
     
-    private func buildTemplate(fileURL: URL) async throws -> Template {
-        let plugin = try TemplatePlugin(fileURL: fileURL)
-        do {
-            let templateImage = try await plugin.build()
-            
-            typealias RenderTemplate = @convention(c) (Any, NSImage, String) -> Any
-            let (templateTypes, renderTemplate) = try templateImage.open(
-                isTemplateSymbol: "isTemplate",
-                renderTemplateSymbol: "renderTemplate",
-                renderTemplateType: RenderTemplate.self
-            )
-            
-            let type: Any.Type = try {
-                if let templateType = templateType {
-                    return try templateTypes
-                        .first { "\($0)" == templateType }
-                        .unwrapOrThrow("Did not find the type specified with the --template-type option: \(templateType)")
-                    
-                } else if templateTypes.count > 1 {
-                    throw "Template contains multiple template types, choose which one to use with the --template-type option. Available types: \(templateTypes.map { "\($0)" })"
-                } else if let type = templateTypes.first {
-                    return type
-                } else {
-                    throw "Plugin doesn't contain a template struct"
-                }
-            }()
-            
-            return .init(
-                render: {
-                    try (renderTemplate(type, $0, $1) as? AnyView)
-                        .unwrapOrThrow("Could not generate SwiftUI view from plugin")
-                },
-                cleanUp: {
-                    try plugin.cleanUp()
-                }
-            )
-        } catch {
-            try? plugin.cleanUp()
-            throw error
-        }
-    }
-    
-    private func applyTemplate(_ template: Template, to icon: Icon) throws {
-        let renderedTemplate = try template.render(icon.image, text)
+    private func applyTemplate(_ template: Template<(NSImage, String)>, to icon: Icon) throws {
+        let renderedTemplate = try template.render((icon.image, text))
         try icon.replace(with: renderedTemplate)
-    }
-}
-
-private extension TextCommand {
-    struct Template {
-        let render: (_ image: NSImage, _ text: String) throws -> AnyView
-        let cleanUp: () throws -> Void
     }
 }
 
