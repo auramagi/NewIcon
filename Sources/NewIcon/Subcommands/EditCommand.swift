@@ -22,7 +22,7 @@ struct EditCommand: AsyncParsableCommand {
     
     @MainActor func run() async throws {
         let fileURL = try path.resolvedAsRelativePath
-        let plugin = try TemplatePlugin(fileURL: fileURL)
+        let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: TemplatePlugin.InstallationURL.temporary)
         
         printExplanation(fileURL: fileURL, plugin: plugin)
         

@@ -18,4 +18,10 @@ extension FileManager {
         }
         return url
     }
+    
+    func createDirectoryIfNeeded(at url: URL, withIntermediateDirectories createIntermediates: Bool = true) throws {
+        if !fileExists(atPath: url.path) {
+            try createDirectory(at: url, withIntermediateDirectories: createIntermediates)
+        }
+    }
 }

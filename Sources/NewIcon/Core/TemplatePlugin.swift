@@ -9,13 +9,13 @@ import AppKit
 import Foundation
 
 struct TemplatePlugin {
-    let temporaryDirectory: URL
+    let installationURL: InstallationURL
     
     let package: URL
     
     let templateFile: URL
     
-    init(fileURL: URL) throws {
+    init(fileURL: URL, installationURL: InstallationURL) throws {
         let bundle = try Bundle.locateResourcesBundle()
         
         func template(_ name: String, renamedTo newName: String) throws -> FileWrapper {
@@ -25,9 +25,6 @@ struct TemplatePlugin {
             wrapper.preferredFilename = newName
             return wrapper
         }
-        
-        let temporaryDirectory = FileManager.default.temporaryDirectory.appendingPathComponent(ProcessInfo().globallyUniqueString, isDirectory: true)
-        let package = temporaryDirectory.appendingPathComponent("Template", isDirectory: true)
         
         try FileWrapper(directoryWithFileWrappers: [
             "Template": FileWrapper(directoryWithFileWrappers: [
@@ -47,12 +44,12 @@ struct TemplatePlugin {
                 ]),
             ]),
         ]).write(
-            to: temporaryDirectory,
+            to: installationURL.url,
             originalContentsURL: nil
         )
         
-        self.temporaryDirectory = temporaryDirectory
-        self.package = package
+        self.installationURL = installationURL
+        self.package = installationURL.url.appendingPathComponent("Template", isDirectory: true)
         self.templateFile = URL(fileURLWithPath: "Sources/Template/\(fileURL.lastPathComponent)", relativeTo: package)
     }
     
@@ -74,7 +71,8 @@ struct TemplatePlugin {
     }
     
     func cleanUp() throws {
-        try FileManager.default.removeItem(at: temporaryDirectory)
+        guard installationURL.isTemporary else { return }
+        try FileManager.default.removeItem(at: installationURL.url)
     }
 }
 
@@ -111,5 +109,46 @@ struct TemplateImage {
             .filter(isTemplate)
         
         return (templateTypes, renderTemplate)
+    }
+}
+
+extension TemplatePlugin {
+    struct InstallationURL {
+        let url: URL
+        
+        let isTemporary: Bool
+    
+        static var commonPath = "~/.new-icon"
+        
+        static var temporary: Self {
+            get throws {
+                .init(
+                    url: try commonPath
+                        .resolvedAsRelativePath(checkExistence: false)
+                        .appendingPathComponent("temp", isDirectory: true)
+                        .creatingDirectoryIfNeeded
+                        .appendingPathComponent(ProcessInfo().globallyUniqueString),
+                    isTemporary: true
+                )
+                
+            }
+        }
+        
+        static var permanentCommonURL: URL {
+            get throws {
+                try commonPath
+                    .resolvedAsRelativePath(checkExistence: false)
+                    .appendingPathComponent("plugins", isDirectory: true)
+                    .creatingDirectoryIfNeeded
+            }
+        }
+        
+        static func permanent(name: String) throws -> Self {
+            .init(
+                url: try permanentCommonURL
+                    .appendingPathComponent(name),
+                isTemporary: false
+            )
+        }
     }
 }

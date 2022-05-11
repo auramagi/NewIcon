@@ -24,9 +24,17 @@ extension Template {
 }
 
 extension Template.Builder {
-    func build(fileURL: URL?, templateType: String?) async throws -> Template<Input> {
+    func build(
+        fileURL: URL?,
+        installationURL: TemplatePlugin.InstallationURL,
+        templateType: String?
+    ) async throws -> Template<Input> {
         if let fileURL = fileURL {
-            return try await build(fileURL: fileURL, templateType: templateType)
+            return try await build(
+                fileURL: fileURL,
+                installationURL: installationURL,
+                templateType: templateType
+            )
         } else {
             return .init(
                 render: { try defaultTemplate($0) },
@@ -35,8 +43,12 @@ extension Template.Builder {
         }
     }
     
-    private func build(fileURL: URL, templateType: String?) async throws -> Template<Input> {
-        let plugin = try TemplatePlugin(fileURL: fileURL)
+    private func build(
+        fileURL: URL,
+        installationURL: TemplatePlugin.InstallationURL,
+        templateType: String?
+    ) async throws -> Template<Input> {
+        let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
         do {
             let templateImage = try await plugin.build()
             
