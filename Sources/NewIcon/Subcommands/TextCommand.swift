@@ -58,10 +58,17 @@ struct TextCommand: AsyncParsableCommand {
     var output: String?
     
     private static var builder = Template.Builder(
-        isTemplateSymbol: "isTemplate",
-        renderTemplateSymbol: "renderTemplate",
-        renderTemplateInputType: (NSImage, String).self,
-        defaultTemplate: { AnyView(IconTextView(image: $0.0, text: $0.1)) }
+        isTemplateSymbol: "isImageTemplate",
+        renderTemplateSymbol: "renderImageTemplate",
+        renderTemplateInputType: (NSImage, Data).self,
+        defaultTemplate: {
+            AnyView(
+                ImageTemplateView(
+                    image: $0.0,
+                    content: try JSONDecoder().decode(String.self, from: $0.1)
+                )
+            )
+        }
     )
     
     @MainActor func run() async throws {
@@ -77,7 +84,8 @@ struct TextCommand: AsyncParsableCommand {
         )
         defer { icon.cleanUp() }
         
-        let renderedTemplate = try template.render((icon.image, text))
+        let data = try JSONEncoder().encode(text)
+        let renderedTemplate = try template.render((icon.image, data))
         try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
     }
 }
@@ -85,10 +93,10 @@ struct TextCommand: AsyncParsableCommand {
 // MARK: - Default template
 
 // Default template. Synced to PluginTemplate/Template-Template-swift.template
-private struct IconTextView: View {
+private struct ImageTemplateView: View {
     let image: NSImage
 
-    let text: String
+    let content: String
 
     // Expect size to be 1024x1024
     var body: some View {
@@ -96,7 +104,7 @@ private struct IconTextView: View {
             .resizable()
             .scaledToFit()
             .overlay(
-                Text(text)
+                Text(content)
                     .font(.system(size: 160, weight: .bold, design: .rounded))
                     .colorScheme(.dark)
                     .minimumScaleFactor(0.1)

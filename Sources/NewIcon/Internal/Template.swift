@@ -19,7 +19,7 @@ extension Template {
         let isTemplateSymbol: String
         let renderTemplateSymbol: String
         let renderTemplateInputType: Input.Type
-        let defaultTemplate: (Input) -> AnyView
+        let defaultTemplate: (Input) throws -> AnyView
     }
 }
 
@@ -29,7 +29,7 @@ extension Template.Builder {
             return try await build(fileURL: fileURL, templateType: templateType)
         } else {
             return .init(
-                render: { defaultTemplate($0) },
+                render: { try defaultTemplate($0) },
                 cleanUp: { }
             )
         }
@@ -64,8 +64,9 @@ extension Template.Builder {
             
             return .init(
                 render: {
-                    try (renderTemplate(type, $0) as? AnyView)
+                    try (renderTemplate(type, $0) as? Result<AnyView, Error>)
                         .unwrapOrThrow("Could not generate SwiftUI view from plugin")
+                        .get()
                 },
                 cleanUp: {
                     do {
