@@ -25,17 +25,21 @@ extension Template {
 
 extension Template.Builder {
     func build(
+        plugin: String?,
         fileURL: URL?,
         installationURL: TemplatePlugin.InstallationURL,
         templateType: String?
     ) async throws -> Template<Input> {
-        if let fileURL = fileURL {
+        if let plugin = plugin {
+            let metadata = try InstalledPluginsMetadata.data(name: plugin)
+                .unwrapOrThrow("Plugin \(plugin) not installed")
+            let templateImage = TemplateImage(url: metadata.build)
+            return build(templateImage: templateImage, templateType: templateType) { }
+        } else if let fileURL = fileURL {
             let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
             do {
                 let templateImage = try await plugin.build()
-                return .init {
-                    try run(templateImage: templateImage, templateType: templateType, input: $0)
-                } cleanUp: {
+                return build(templateImage: templateImage, templateType: templateType) {
                     do {
                         try plugin.cleanUp()
                     } catch {
@@ -51,6 +55,14 @@ extension Template.Builder {
                 try defaultTemplate($0)
             } cleanUp: {
             }
+        }
+    }
+    
+    func build(templateImage: TemplateImage, templateType: String?, cleanup: @escaping () -> Void) -> Template {
+        .init {
+            try run(templateImage: templateImage, templateType: templateType, input: $0)
+        } cleanUp: {
+            cleanup()
         }
     }
     
