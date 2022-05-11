@@ -24,4 +24,9 @@ extension FileManager {
             try createDirectory(at: url, withIntermediateDirectories: createIntermediates)
         }
     }
+    
+    func removeItemIfExists(at url: URL) throws {
+        guard fileExists(atPath: url.path) else { return }
+        try removeItem(at: url)
+    }
 }

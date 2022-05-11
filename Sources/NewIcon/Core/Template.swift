@@ -30,67 +30,40 @@ extension Template.Builder {
         templateType: String?
     ) async throws -> Template<Input> {
         if let fileURL = fileURL {
-            return try await build(
-                fileURL: fileURL,
-                installationURL: installationURL,
-                templateType: templateType
-            )
-        } else {
-            return .init(
-                render: { try defaultTemplate($0) },
-                cleanUp: { }
-            )
-        }
-    }
-    
-    private func build(
-        fileURL: URL,
-        installationURL: TemplatePlugin.InstallationURL,
-        templateType: String?
-    ) async throws -> Template<Input> {
-        let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
-        do {
-            let templateImage = try await plugin.build()
-            
-            typealias RenderTemplate = @convention(c) (Any, Any) -> Any
-            let (templateTypes, renderTemplate) = try templateImage.open(
-                isTemplateSymbol: isTemplateSymbol,
-                renderTemplateSymbol: renderTemplateSymbol,
-                renderTemplateType: RenderTemplate.self
-            )
-            
-            let type: Any.Type = try {
-                if let templateType = templateType {
-                    return try templateTypes
-                        .first { "\($0)" == templateType }
-                        .unwrapOrThrow("Did not find the type specified with the --template-type option: \(templateType)")
-                    
-                } else if templateTypes.count > 1 {
-                    throw "Template contains multiple template types, choose which one to use with the --template-type option. Available types: \(templateTypes.map { "\($0)" })"
-                } else if let type = templateTypes.first {
-                    return type
-                } else {
-                    throw "Plugin doesn't contain a template struct"
-                }
-            }()
-            
-            return .init(
-                render: {
-                    try (renderTemplate(type, $0) as? Result<AnyView, Error>)
-                        .unwrapOrThrow("Could not generate SwiftUI view from plugin")
-                        .get()
-                },
-                cleanUp: {
+            let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
+            do {
+                let templateImage = try await plugin.build()
+                return .init {
+                    try run(templateImage: templateImage, templateType: templateType, input: $0)
+                } cleanUp: {
                     do {
                         try plugin.cleanUp()
                     } catch {
                         print("Warning: Error while cleaning up plugin folder.", error)
                     }
                 }
-            )
-        } catch {
-            try? plugin.cleanUp()
-            throw error
+            } catch {
+                try? plugin.cleanUp()
+                throw error
+            }
+        } else {
+            return .init {
+                try defaultTemplate($0)
+            } cleanUp: {
+            }
         }
+    }
+    
+    private func run(templateImage: TemplateImage, templateType: String?, input: Input) throws -> AnyView {
+        typealias RenderTemplate = @convention(c) (Any, Any) -> Any
+        let (type, renderTemplate) = try templateImage.open(
+            isTemplateSymbol: isTemplateSymbol,
+            renderTemplateSymbol: renderTemplateSymbol,
+            renderTemplateType: RenderTemplate.self,
+            templateType: templateType
+        )
+        return try (renderTemplate(type, input) as? Result<AnyView, Error>)
+            .unwrapOrThrow("Could not generate SwiftUI view from plugin")
+            .get()
     }
 }
