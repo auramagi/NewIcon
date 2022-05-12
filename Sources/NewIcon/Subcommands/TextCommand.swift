@@ -10,14 +10,14 @@ import ArgumentParser
 import Foundation
 import SwiftUI
 
-struct TextCommand: ParsableCommand {
+struct TextCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "text",
         abstract: "Overlay text over the original icon."
     )
     
     @Argument(
-        help: "Path to the file or directory.",
+        help: "Path to a file or directory.",
         completion: .file()
     )
     var path: String
@@ -27,52 +27,98 @@ struct TextCommand: ParsableCommand {
     )
     var text: String
     
+    @Option(
+        name: .shortAndLong,
+        help: "An image to use instead of extracting the original icon.",
+        completion: .file()
+    )
+    var image: String?
     
-    func run() throws {        
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw "File does not exist"
+    @Option(
+        name: .shortAndLong,
+        help: "Installed plugin name"
+    )
+    var plugin: String?
+    
+    @Option(
+        name: .shortAndLong,
+        help: "Path to template file.",
+        completion: .file()
+    )
+    var template: String?
+    
+    @Option(
+        name: .long,
+        help: ArgumentHelp(
+            "Struct type to use.",
+            discussion: "If a template contains several possible template types, this option specifies which one to use."
+        )
+    )
+    var templateType: String?
+    
+    @Option(
+        name: .shortAndLong,
+        help: "Path to write out the resulting image instead of changing the icon.",
+        completion: .file()
+    )
+    var output: String?
+    
+    private static var builder = Template.Builder(
+        isTemplateSymbol: "isImageTemplate",
+        renderTemplateSymbol: "renderImageTemplate",
+        renderTemplateInputType: (NSImage, Data).self,
+        defaultTemplate: {
+            AnyView(
+                ImageTemplateView(
+                    image: $0.0,
+                    content: try JSONDecoder().decode(String.self, from: $0.1)
+                )
+            )
         }
-
-        let workspace = NSWorkspace.shared
+    )
+    
+    @MainActor func run() async throws {
+        let template = try await Self.builder.build(
+            plugin: plugin,
+            fileURL: try template?.resolvedAsRelativePath,
+            installationURL: try TemplatePlugin.InstallationURL.temporary,
+            templateType: templateType
+        )
+        defer { template.cleanUp() }
         
-        let oldIcon = workspace.icon(forFile: path)
-        
-        workspace.setIcon(nil, forFile: path)
-        let originalIcon = workspace.icon(forFile: path)
+        let icon = try Icon.load(
+            target:  try path.resolvedAsRelativePath,
+            imageURL: try image?.resolvedAsRelativePath
+        )
         
         do {
-            try setNewIcon(originalIcon: originalIcon, workspace: workspace)
+            let data = try JSONEncoder().encode(text)
+            let renderedTemplate = try template.render((icon.image, data))
+            try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
         } catch {
-            workspace.setIcon(oldIcon, forFile: path)
+            icon.cleanUp()
             throw error
         }
     }
-    
-    private func setNewIcon(originalIcon: NSImage, workspace: NSWorkspace) throws {
-        let bestRepresentation = try originalIcon.bestRepresentation(for: .infinite, context: nil, hints: [:])
-            .unwrapOrThrow("Could not convert the original icon")
-        
-        let originalIcon = NSImage()
-        originalIcon.addRepresentation(bestRepresentation)
-        
-        let newIcon = try IconTextView(icon: originalIcon, text: text).asNSImage()
-        
-        workspace.setIcon(newIcon, forFile: path)
-    }
 }
 
-private struct IconTextView: View {
-    let icon: NSImage
-    
-    let text: String
-    
+// MARK: - Default template
+
+// Default template. Synced to PluginTemplate/Template-Template-swift.template
+private struct ImageTemplateView: View {
+    let image: NSImage
+
+    let content: String
+
+    // Expect size to be 1024x1024
     var body: some View {
-        Image(nsImage: icon)
+        Image(nsImage: image)
             .resizable()
-            .frame(width: 1024, height: 1024)
+            .scaledToFit()
             .overlay(
-                Text(text)
+                Text(content)
                     .font(.system(size: 160, weight: .bold, design: .rounded))
+                    .colorScheme(.dark)
                     .minimumScaleFactor(0.1)
                     .multilineTextAlignment(.center)
                     .frame(width: 612)
@@ -84,6 +130,5 @@ private struct IconTextView: View {
                     )
                     .alignmentGuide(VerticalAlignment.center) { $0.height / 2 - 184 }
             )
-            .environment(\.colorScheme, .dark)
     }
 }

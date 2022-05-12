@@ -17,6 +17,9 @@ let package = Package(
             name: "NewIcon",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ],
+            resources: [
+                .copy("PluginTemplate"),
             ]
         ),
     ]

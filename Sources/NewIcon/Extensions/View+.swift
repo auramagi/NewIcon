@@ -22,6 +22,11 @@ private final class NoInsetHostingView<V: View>: NSHostingView<V> {
 
 private extension NSView {
     func bitmapImage() throws -> NSImage {
+        let window = SnapshottingWindow()
+        window.contentView = NSView()
+        window.contentView?.addSubview(self)
+        window.colorSpace = .deviceRGB
+        
         let imageRep = try bitmapImageRepForCachingDisplay(in: bounds)
             .unwrapOrThrow("Could not make bitmapImageRep")
         
@@ -31,4 +36,10 @@ private extension NSView {
         
         return NSImage(cgImage: cgImage, size: bounds.size)
     }
+}
+
+private class SnapshottingWindow: NSWindow {
+    private var _backingScaleFactor: CGFloat = 1
+    
+    override var backingScaleFactor: CGFloat { _backingScaleFactor }
 }

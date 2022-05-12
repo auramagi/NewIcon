@@ -1,0 +1,30 @@
+import SwiftUI
+import TemplateSupport
+
+struct ImageTemplateView: ImageTemplate, PreviewProvider {
+    let image: NSImage
+
+    let content: String
+
+    // Expect size to be 1024x1024
+    var body: some View {
+        Image(nsImage: image)
+            .resizable()
+            .scaledToFit()
+            .overlay(
+                Text(content)
+                    .font(.system(size: 160, weight: .bold, design: .rounded))
+                    .colorScheme(.dark)
+                    .minimumScaleFactor(0.1)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 612)
+                    .frame(maxHeight: 189)
+                    .padding(.horizontal, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 32)
+                            .fill(.black.opacity(0.56))
+                    )
+                    .alignmentGuide(VerticalAlignment.center) { $0.height / 2 - 184 }
+            )
+    }
+}

@@ -9,23 +9,21 @@ import AppKit
 import ArgumentParser
 import Foundation
 
-struct ResetCommand: ParsableCommand {
+struct ResetCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "reset",
         abstract: "Revert to the original icon."
     )
     
     @Argument(
-        help: "Path to the file or directory.",
+        help: "Path to a file or directory.",
         completion: .file()
     )
     var path: String
     
-    func run() throws {
-        guard FileManager.default.fileExists(atPath: path) else {
-            throw "File does not exist"
-        }
+    @MainActor func run() async throws {
+        let targetFilePath = try path.resolvedAsRelativePath.path
         
-        NSWorkspace.shared.setIcon(nil, forFile: path)
+        NSWorkspace.shared.setIcon(nil, forFile: targetFilePath)
     }
 }
