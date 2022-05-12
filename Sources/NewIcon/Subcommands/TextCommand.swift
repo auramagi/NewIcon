@@ -90,11 +90,15 @@ struct TextCommand: AsyncParsableCommand {
             target:  try path.resolvedAsRelativePath,
             imageURL: try image?.resolvedAsRelativePath
         )
-        defer { icon.cleanUp() }
         
-        let data = try JSONEncoder().encode(text)
-        let renderedTemplate = try template.render((icon.image, data))
-        try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
+        do {
+            let data = try JSONEncoder().encode(text)
+            let renderedTemplate = try template.render((icon.image, data))
+            try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
+        } catch {
+            icon.cleanUp()
+            throw error
+        }
     }
 }
 
