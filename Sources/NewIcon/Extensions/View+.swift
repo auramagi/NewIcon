@@ -10,23 +10,18 @@ import SwiftUI
 
 extension View {
     func asNSImage() throws -> NSImage {
-        let view = NoInsetHostingView(rootView: self)
-        view.setFrameSize(view.fittingSize)
-        return try view.bitmapImage()
+        let controller = NSHostingController(rootView: self)
+        let window = SnapshottingWindow()
+        window.backingType = .buffered
+        window.styleMask = [.borderless, .fullSizeContentView]
+        window.colorSpace = .deviceRGB
+        window.contentViewController = controller
+        return try controller.view.bitmapImage()
     }
 }
 
-private final class NoInsetHostingView<V: View>: NSHostingView<V> {
-    override var safeAreaInsets: NSEdgeInsets { .init() }
-}
-
-private extension NSView {
+extension NSView {
     func bitmapImage() throws -> NSImage {
-        let window = SnapshottingWindow()
-        window.contentView = NSView()
-        window.contentView?.addSubview(self)
-        window.colorSpace = .deviceRGB
-        
         let imageRep = try bitmapImageRepForCachingDisplay(in: bounds)
             .unwrapOrThrow("Could not make bitmapImageRep")
         
@@ -39,7 +34,5 @@ private extension NSView {
 }
 
 private class SnapshottingWindow: NSWindow {
-    private var _backingScaleFactor: CGFloat = 1
-    
-    override var backingScaleFactor: CGFloat { _backingScaleFactor }
+    override var backingScaleFactor: CGFloat { 1 }
 }
