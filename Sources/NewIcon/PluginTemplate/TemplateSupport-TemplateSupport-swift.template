@@ -74,6 +74,7 @@ public extension ImageTemplate where Self: PreviewProvider, Content == String {
         }
         .frame(width: 1024, height: 1024)
         .colorScheme(.light)
+        .drawingGroup()
         .previewLayout(.sizeThatFits)
     }
 }

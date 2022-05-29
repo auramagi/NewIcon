@@ -26,6 +26,7 @@ struct Icon {
         let newImage = try renderedTemplate
             .frame(width: 1024, height: 1024)
             .colorScheme(.light)
+            .drawingGroup() // Make SwiftUI rasterize the view first
             .asNSImage()
         
         if let output = output {
