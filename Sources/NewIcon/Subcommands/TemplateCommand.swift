@@ -14,6 +14,7 @@ struct TemplateCommand: AsyncParsableCommand {
         subcommands: [
             TemplateInitCommand.self,
             TemplateEditCommand.self,
+            TemplateCacheCommand.self,
             TemplateIconCommand.self,
         ]
     )
