@@ -10,7 +10,7 @@ import AppKit
 import SwiftUI
 
 struct TemplateIconCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "icon",
         abstract: "Render a template with an icon and some content."
     )

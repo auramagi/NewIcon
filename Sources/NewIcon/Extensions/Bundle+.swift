@@ -21,4 +21,14 @@ extension Bundle {
         return try Bundle(url: bundleURL)
             .unwrapOrThrow("Could not open resources bundle at \(bundleURL.path)")
     }
+    
+    func template(_ name: String, renamedTo newName: String? = nil) throws -> FileWrapper {
+        let wrapper = try url(forResource: name, withExtension: "template")
+            .map { try FileWrapper(url: $0) }
+            .unwrapOrThrow("Could not locate template resource: \(name)")
+        if let newName = newName {
+            wrapper.preferredFilename = newName
+        }
+        return wrapper
+    }
 }

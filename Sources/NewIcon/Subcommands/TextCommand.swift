@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 
 struct TextCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "text",
         abstract: "Overlay text over the original icon."
     )

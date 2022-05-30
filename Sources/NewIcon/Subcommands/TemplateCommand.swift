@@ -8,9 +8,13 @@
 import ArgumentParser
 
 struct TemplateCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "template",
         abstract: "Render a custom SwiftUI template.",
-        subcommands: [TemplateEditCommand.self, TemplateIconCommand.self]
+        subcommands: [
+            TemplateInitCommand.self,
+            TemplateEditCommand.self,
+            TemplateIconCommand.self,
+        ]
     )
 }

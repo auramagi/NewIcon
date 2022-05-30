@@ -10,7 +10,7 @@ import ArgumentParser
 import Foundation
 
 struct ResetCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "reset",
         abstract: "Revert to the original icon."
     )

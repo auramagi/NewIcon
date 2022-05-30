@@ -44,27 +44,19 @@ struct TemplatePlugin {
     private func copyFiles() throws {
         let bundle = try Bundle.locateResourcesBundle()
         
-        func template(_ name: String, renamedTo newName: String) throws -> FileWrapper {
-            let wrapper = try bundle.url(forResource: name, withExtension: "template")
-                .map { try FileWrapper(url: $0) }
-                .unwrapOrThrow("Could not locate template resource: \(name)")
-            wrapper.preferredFilename = newName
-            return wrapper
-        }
-        
         try FileWrapper(directoryWithFileWrappers: [
             "Template": FileWrapper(directoryWithFileWrappers: [
-                "Package.swift": try template("PluginTemplate/Template-Package-swift", renamedTo: "Package.swift"),
+                "Package.swift": try bundle.template("PluginTemplate/Template-Package-swift", renamedTo: "Package.swift"),
                 "Sources": FileWrapper(directoryWithFileWrappers: [
                     "Template": FileWrapper(directoryWithFileWrappers: [
                         "Template.swift": try FileWrapper(url: source),
                     ]),
                 ]),
                 "TemplateSupport": FileWrapper(directoryWithFileWrappers: [
-                    "Package.swift": try template("PluginTemplate/TemplateSupport-Package-swift", renamedTo: "Package.swift"),
+                    "Package.swift": try bundle.template("PluginTemplate/TemplateSupport-Package-swift", renamedTo: "Package.swift"),
                     "Sources": FileWrapper(directoryWithFileWrappers: [
                         "TemplateSupport": FileWrapper(directoryWithFileWrappers: [
-                            "TemplateSupport.swift": try template("PluginTemplate/TemplateSupport-TemplateSupport-swift", renamedTo: "TemplateSupport.swift"),
+                            "TemplateSupport.swift": try bundle.template("PluginTemplate/TemplateSupport-TemplateSupport-swift", renamedTo: "TemplateSupport.swift"),
                         ]),
                     ]),
                 ]),

@@ -9,7 +9,7 @@ import ArgumentParser
 import Foundation
 
 struct TemplateEditCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "edit",
         abstract: "Edit a template file."
     )
