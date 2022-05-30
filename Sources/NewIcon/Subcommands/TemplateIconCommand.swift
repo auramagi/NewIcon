@@ -1,20 +1,26 @@
 //
-//  TextCommand.swift
+//  TemplateIconCommand.swift
 //  
 //
-//  Created by Mikhail Apurin on 28.04.2022.
+//  Created by Mikhail Apurin on 30.05.2022.
 //
 
-import AppKit
 import ArgumentParser
-import Foundation
+import AppKit
 import SwiftUI
 
-struct TextCommand: AsyncParsableCommand {
+struct TemplateIconCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
-        commandName: "text",
-        abstract: "Overlay text over the original icon."
+        commandName: "icon",
+        abstract: "Render a template with an icon and some content."
     )
+
+    @Option(
+        name: .shortAndLong,
+        help: "Path to a template file.",
+        completion: .file()
+    )
+    var template: String?
     
     @Argument(
         help: "Path to a file or directory.",
@@ -23,9 +29,9 @@ struct TextCommand: AsyncParsableCommand {
     var path: String
     
     @Argument(
-        help: "Text to overlay."
+        help: "Content to pass to the template."
     )
-    var text: String
+    var text: String?
     
     @Option(
         name: .shortAndLong,
@@ -33,19 +39,6 @@ struct TextCommand: AsyncParsableCommand {
         completion: .file()
     )
     var image: String?
-    
-    @Option(
-        name: .shortAndLong,
-        help: "Installed plugin name"
-    )
-    var plugin: String?
-    
-    @Option(
-        name: .shortAndLong,
-        help: "Path to a template file.",
-        completion: .file()
-    )
-    var template: String?
     
     @Option(
         name: .long,
@@ -67,19 +60,12 @@ struct TextCommand: AsyncParsableCommand {
         isTemplateSymbol: "isImageTemplate",
         renderTemplateSymbol: "renderImageTemplate",
         renderTemplateInputType: (NSImage, Data).self,
-        defaultTemplate: {
-            AnyView(
-                ImageTemplateView(
-                    image: $0.0,
-                    content: try JSONDecoder().decode(String.self, from: $0.1)
-                )
-            )
-        }
+        defaultTemplate: { _ in throw "Could not render provided template" }
     )
     
     @MainActor func run() async throws {
         let template = try await Self.builder.build(
-            plugin: plugin,
+            plugin: nil,
             fileURL: try template?.resolvedAsRelativePath,
             installationURL: try TemplatePlugin.InstallationURL.temporary,
             templateType: templateType
@@ -99,34 +85,5 @@ struct TextCommand: AsyncParsableCommand {
             icon.cleanUp()
             throw error
         }
-    }
-}
-
-/// Text Template. Also the sample custom template, provided via PluginTemplate/Template-Template-swift.template
-private struct ImageTemplateView: View {
-    let image: NSImage
-
-    let content: String
-
-    // Expect size to be 1024x1024
-    var body: some View {
-        Image(nsImage: image)
-            .resizable()
-            .scaledToFit()
-            .overlay(
-                Text(content)
-                    .font(.system(size: 160, weight: .bold, design: .rounded))
-                    .colorScheme(.dark)
-                    .minimumScaleFactor(0.1)
-                    .multilineTextAlignment(.center)
-                    .frame(width: 612)
-                    .frame(maxHeight: 189)
-                    .padding(.horizontal, 16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 32)
-                            .fill(.black.opacity(0.56))
-                    )
-                    .alignmentGuide(VerticalAlignment.center) { $0.height / 2 - 184 }
-            )
     }
 }
