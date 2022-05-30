@@ -9,7 +9,6 @@ struct NewIcon: AsyncParsableCommand {
             TextCommand.self,
             ResetCommand.self,
             EditCommand.self,
-            PluginCommand.self,
             TemplateCommand.self,
         ]
     )
