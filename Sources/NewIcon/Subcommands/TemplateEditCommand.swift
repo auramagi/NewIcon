@@ -1,5 +1,5 @@
 //
-//  EditCommand.swift
+//  TemplateEditCommand.swift
 //  
 //
 //  Created by Mikhail Apurin on 09.05.2022.
@@ -8,7 +8,7 @@
 import ArgumentParser
 import Foundation
 
-struct EditCommand: AsyncParsableCommand {
+struct TemplateEditCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "edit",
         abstract: "Edit a template file."

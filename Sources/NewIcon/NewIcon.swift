@@ -8,7 +8,6 @@ struct NewIcon: AsyncParsableCommand {
         subcommands: [
             TextCommand.self,
             ResetCommand.self,
-            EditCommand.self,
             TemplateCommand.self,
         ]
     )

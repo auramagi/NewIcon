@@ -11,6 +11,6 @@ struct TemplateCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "template",
         abstract: "Render a custom SwiftUI template.",
-        subcommands: [TemplateIconCommand.self]
+        subcommands: [TemplateEditCommand.self, TemplateIconCommand.self]
     )
 }
