@@ -41,7 +41,7 @@ struct TemplatePlugin {
         return try await build()
     }
     
-    private func copyFiles() throws {
+    func copyFiles() throws {
         let bundle = try Bundle.locateResourcesBundle()
         
         try FileWrapper(directoryWithFileWrappers: [

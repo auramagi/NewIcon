@@ -19,5 +19,6 @@ extension Data {
     
     func base64EncodedSHA256Hash() -> String {
         sha256Hash().base64EncodedString()
+            .replacingOccurrences(of: "/", with: "*")
     }
 }
