@@ -88,7 +88,7 @@ struct TextCommand: AsyncParsableCommand {
         if let template = template {
             return try await Self.builder.build(
                 fileURL: try template.resolvedAsRelativePath,
-                installationURL: try TemplatePlugin.InstallationURL.temporary,
+                useCache: true,
                 templateType: templateType
             )
         } else {

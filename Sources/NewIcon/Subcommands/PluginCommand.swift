@@ -59,11 +59,11 @@ struct PluginInstallCommand: AsyncParsableCommand {
         guard try InstalledPluginsMetadata.data(name: name) == nil else {
             throw "Plugin with name \(name) already installed."
         }
-        let installationURL = try TemplatePlugin.InstallationURL.permanent(name: name)
+        let installationURL = try TemplatePlugin.InstallationURL.permanent(fileURL: fileURL)
         try FileManager.default.removeItemIfExists(at: installationURL.url)
         let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
         do {
-            let templateImage = try await plugin.build()
+            let templateImage = try await plugin.makeImage()
             let metadata = PluginMetadata(
                 name: name,
                 directory: installationURL.url,

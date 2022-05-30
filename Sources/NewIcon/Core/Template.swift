@@ -25,12 +25,15 @@ extension Template {
 extension Template.Builder {
     func build(
         fileURL: URL,
-        installationURL: TemplatePlugin.InstallationURL,
+        useCache: Bool,
         templateType: String?
     ) async throws -> Template<Input> {
-        let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
+        let plugin = try TemplatePlugin(
+            fileURL: fileURL,
+            installationURL: useCache ? try .permanent(fileURL: fileURL) : try .temporary
+        )
         do {
-            let templateImage = try await plugin.build()
+            let templateImage = try await plugin.makeImage()
             return build(templateImage: templateImage, templateType: templateType) {
                 do {
                     try plugin.cleanUp()

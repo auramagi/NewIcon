@@ -66,7 +66,7 @@ struct TemplateIconCommand: AsyncParsableCommand {
     @MainActor func run() async throws {
         let template = try await Self.builder.build(
             fileURL: try template.resolvedAsRelativePath,
-            installationURL: try TemplatePlugin.InstallationURL.temporary,
+            useCache: true,
             templateType: templateType
         )
         defer { template.cleanUp() }
