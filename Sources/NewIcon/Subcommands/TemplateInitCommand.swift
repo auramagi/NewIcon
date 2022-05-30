@@ -15,13 +15,13 @@ struct TemplateInitCommand: AsyncParsableCommand {
     )
     
     @MainActor func run() async throws {
+        let fileURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+            .appendingPathComponent("Template.swift")
+        
         try Bundle.locateResourcesBundle()
             .template("PluginTemplate/Template-Template-swift")
-            .write(
-                to: URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-                    .appendingPathComponent("Template.swift")
-                ,
-                originalContentsURL: nil
-            )
+            .write(to: fileURL, originalContentsURL: nil)
+        
+        print("Saved a sample template file to", fileURL)
     }
 }

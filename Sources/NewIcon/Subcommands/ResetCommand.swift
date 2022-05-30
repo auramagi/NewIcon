@@ -25,5 +25,7 @@ struct ResetCommand: AsyncParsableCommand {
         let targetFilePath = try path.resolvedAsRelativePath.path
         
         NSWorkspace.shared.setIcon(nil, forFile: targetFilePath)
+        
+        print("Reset icon for", targetFilePath)
     }
 }

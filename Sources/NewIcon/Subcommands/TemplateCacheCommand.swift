@@ -27,5 +27,7 @@ struct TemplateCacheClearCommand: AsyncParsableCommand {
     @MainActor func run() async throws {
         try FileManager.default
             .removeItemIfExists(at: TemplatePlugin.InstallationURL.permanentCommonURL)
+        
+        print("File builds cache cleared.")
     }
 }

@@ -90,5 +90,7 @@ struct TemplateIconCommand: AsyncParsableCommand {
             icon.cleanUp()
             throw error
         }
+        
+        print("Template was successfully rendered.")
     }
 }

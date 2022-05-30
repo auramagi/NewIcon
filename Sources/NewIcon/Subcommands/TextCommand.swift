@@ -88,6 +88,12 @@ struct TextCommand: AsyncParsableCommand {
             icon.cleanUp()
             throw error
         }
+        
+        if output != nil {
+            print("Icon was successfully changed.")
+        } else {
+            print("Image was successfully saved.")
+        }
     }
     
     private func buildTemplate() async throws -> Template<Input> {

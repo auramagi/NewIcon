@@ -42,6 +42,8 @@ struct TemplateEditCommand: AsyncParsableCommand {
         source.cancel()
         saveChanges(original: fileURL, temporary: plugin.templateFile)
         try plugin.cleanUp()
+        
+        print("Removed temporary swift package.")
     }
     
     func printExplanation(fileURL: URL, plugin: TemplatePlugin) {
