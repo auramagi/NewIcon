@@ -42,13 +42,6 @@ struct TextCommand: AsyncParsableCommand {
     var template: String?
     
     @Option(
-        name: .shortAndLong,
-        help: "Path to write out the resulting image instead of changing the icon.",
-        completion: .file()
-    )
-    var output: String?
-    
-    @Option(
         name: .long,
         help: ArgumentHelp(
             "Struct type to use.",
@@ -56,6 +49,19 @@ struct TextCommand: AsyncParsableCommand {
         )
     )
     var templateType: String?
+    
+    @Flag(
+        name: .long,
+        help: "Don't cache template file build."
+    )
+    var noUseCache = false
+    
+    @Option(
+        name: .shortAndLong,
+        help: "Path to write out the resulting image instead of changing the icon.",
+        completion: .file()
+    )
+    var output: String?
     
     private typealias Input = (NSImage, Data)
     
@@ -88,7 +94,7 @@ struct TextCommand: AsyncParsableCommand {
         if let template = template {
             return try await Self.builder.build(
                 fileURL: try template.resolvedAsRelativePath,
-                useCache: true,
+                useCache: !noUseCache,
                 templateType: templateType
             )
         } else {

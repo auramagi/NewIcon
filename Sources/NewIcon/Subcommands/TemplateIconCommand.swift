@@ -33,6 +33,21 @@ struct TemplateIconCommand: AsyncParsableCommand {
     var content: String?
     
     @Option(
+        name: .long,
+        help: ArgumentHelp(
+            "Struct type to use.",
+            discussion: "If a template contains several possible template types, this option specifies which one to use."
+        )
+    )
+    var templateType: String?
+    
+    @Flag(
+        name: .long,
+        help: "Don't cache template file build."
+    )
+    var noUseCache = false
+    
+    @Option(
         name: .shortAndLong,
         help: "An image to use instead of extracting the original icon.",
         completion: .file()
@@ -46,15 +61,6 @@ struct TemplateIconCommand: AsyncParsableCommand {
     )
     var output: String?
     
-    @Option(
-        name: .long,
-        help: ArgumentHelp(
-            "Struct type to use.",
-            discussion: "If a template contains several possible template types, this option specifies which one to use."
-        )
-    )
-    var templateType: String?
-    
     private typealias Input = (NSImage, Data)
     
     private static var builder = Template.Builder(
@@ -66,7 +72,7 @@ struct TemplateIconCommand: AsyncParsableCommand {
     @MainActor func run() async throws {
         let template = try await Self.builder.build(
             fileURL: try template.resolvedAsRelativePath,
-            useCache: true,
+            useCache: !noUseCache,
             templateType: templateType
         )
         defer { template.cleanUp() }
