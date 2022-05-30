@@ -15,12 +15,11 @@ struct TemplateIconCommand: AsyncParsableCommand {
         abstract: "Render a template with an icon and some content."
     )
 
-    @Option(
-        name: .shortAndLong,
+    @Argument(
         help: "Path to a template file.",
         completion: .file()
     )
-    var template: String?
+    var template: String
     
     @Argument(
         help: "Path to a file or directory.",
@@ -31,7 +30,7 @@ struct TemplateIconCommand: AsyncParsableCommand {
     @Argument(
         help: "Content to pass to the template."
     )
-    var text: String?
+    var content: String?
     
     @Option(
         name: .shortAndLong,
@@ -39,6 +38,13 @@ struct TemplateIconCommand: AsyncParsableCommand {
         completion: .file()
     )
     var image: String?
+    
+    @Option(
+        name: .shortAndLong,
+        help: "Path to write out the resulting image instead of changing the icon.",
+        completion: .file()
+    )
+    var output: String?
     
     @Option(
         name: .long,
@@ -49,24 +55,17 @@ struct TemplateIconCommand: AsyncParsableCommand {
     )
     var templateType: String?
     
-    @Option(
-        name: .shortAndLong,
-        help: "Path to write out the resulting image instead of changing the icon.",
-        completion: .file()
-    )
-    var output: String?
+    private typealias Input = (NSImage, Data)
     
     private static var builder = Template.Builder(
         isTemplateSymbol: "isImageTemplate",
         renderTemplateSymbol: "renderImageTemplate",
-        renderTemplateInputType: (NSImage, Data).self,
-        defaultTemplate: { _ in throw "Could not render provided template" }
+        renderTemplateInputType: Input.self
     )
     
     @MainActor func run() async throws {
         let template = try await Self.builder.build(
-            plugin: nil,
-            fileURL: try template?.resolvedAsRelativePath,
+            fileURL: try template.resolvedAsRelativePath,
             installationURL: try TemplatePlugin.InstallationURL.temporary,
             templateType: templateType
         )
@@ -78,7 +77,7 @@ struct TemplateIconCommand: AsyncParsableCommand {
         )
         
         do {
-            let data = try JSONEncoder().encode(text)
+            let data = try JSONEncoder().encode(content)
             let renderedTemplate = try template.render((icon.image, data))
             try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
         } catch {

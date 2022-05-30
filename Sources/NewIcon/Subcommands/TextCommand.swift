@@ -36,16 +36,17 @@ struct TextCommand: AsyncParsableCommand {
     
     @Option(
         name: .shortAndLong,
-        help: "Installed plugin name"
-    )
-    var plugin: String?
-    
-    @Option(
-        name: .shortAndLong,
         help: "Path to a template file.",
         completion: .file()
     )
     var template: String?
+    
+    @Option(
+        name: .shortAndLong,
+        help: "Path to write out the resulting image instead of changing the icon.",
+        completion: .file()
+    )
+    var output: String?
     
     @Option(
         name: .long,
@@ -56,34 +57,16 @@ struct TextCommand: AsyncParsableCommand {
     )
     var templateType: String?
     
-    @Option(
-        name: .shortAndLong,
-        help: "Path to write out the resulting image instead of changing the icon.",
-        completion: .file()
-    )
-    var output: String?
+    private typealias Input = (NSImage, Data)
     
     private static var builder = Template.Builder(
         isTemplateSymbol: "isImageTemplate",
         renderTemplateSymbol: "renderImageTemplate",
-        renderTemplateInputType: (NSImage, Data).self,
-        defaultTemplate: {
-            AnyView(
-                ImageTemplateView(
-                    image: $0.0,
-                    content: try JSONDecoder().decode(String.self, from: $0.1)
-                )
-            )
-        }
+        renderTemplateInputType: Input.self
     )
     
     @MainActor func run() async throws {
-        let template = try await Self.builder.build(
-            plugin: plugin,
-            fileURL: try template?.resolvedAsRelativePath,
-            installationURL: try TemplatePlugin.InstallationURL.temporary,
-            templateType: templateType
-        )
+        let template = try await buildTemplate()
         defer { template.cleanUp() }
         
         let icon = try Icon.load(
@@ -100,6 +83,24 @@ struct TextCommand: AsyncParsableCommand {
             throw error
         }
     }
+    
+    private func buildTemplate() async throws -> Template<Input> {
+        if let template = template {
+            return try await Self.builder.build(
+                fileURL: try template.resolvedAsRelativePath,
+                installationURL: try TemplatePlugin.InstallationURL.temporary,
+                templateType: templateType
+            )
+        } else {
+            return Self.builder.build {
+                ImageTemplateView(
+                    image: $0.0,
+                    content: try JSONDecoder().decode(String.self, from: $0.1)
+                )
+            }
+        }
+    }
+    
 }
 
 /// Text Template. Also the sample custom template, provided via PluginTemplate/Template-Template-swift.template

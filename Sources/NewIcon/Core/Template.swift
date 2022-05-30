@@ -19,42 +19,35 @@ extension Template {
         let isTemplateSymbol: String
         let renderTemplateSymbol: String
         let renderTemplateInputType: Input.Type
-        let defaultTemplate: (Input) throws -> AnyView
     }
 }
 
 extension Template.Builder {
     func build(
-        plugin: String?,
-        fileURL: URL?,
+        fileURL: URL,
         installationURL: TemplatePlugin.InstallationURL,
         templateType: String?
     ) async throws -> Template<Input> {
-        if let plugin = plugin {
-            let metadata = try InstalledPluginsMetadata.data(name: plugin)
-                .unwrapOrThrow("Plugin \(plugin) not installed")
-            let templateImage = TemplateImage(url: metadata.build)
-            return build(templateImage: templateImage, templateType: templateType) { }
-        } else if let fileURL = fileURL {
-            let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
-            do {
-                let templateImage = try await plugin.build()
-                return build(templateImage: templateImage, templateType: templateType) {
-                    do {
-                        try plugin.cleanUp()
-                    } catch {
-                        print("Warning: Error while cleaning up plugin folder.", error)
-                    }
+        let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: installationURL)
+        do {
+            let templateImage = try await plugin.build()
+            return build(templateImage: templateImage, templateType: templateType) {
+                do {
+                    try plugin.cleanUp()
+                } catch {
+                    print("Warning: Error while cleaning up plugin folder.", error)
                 }
-            } catch {
-                try? plugin.cleanUp()
-                throw error
             }
-        } else {
-            return .init {
-                try defaultTemplate($0)
-            } cleanUp: {
-            }
+        } catch {
+            try? plugin.cleanUp()
+            throw error
+        }
+    }
+    
+    func build<V: View>(builtinTemplate: @escaping (Input) throws -> V) -> Template<Input> {
+        .init {
+            AnyView(try builtinTemplate($0))
+        } cleanUp: {
         }
     }
     
