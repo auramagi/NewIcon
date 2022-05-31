@@ -36,28 +36,6 @@ struct TextCommand: AsyncParsableCommand {
     
     @Option(
         name: .shortAndLong,
-        help: "Path to a template file.",
-        completion: .file()
-    )
-    var template: String?
-    
-    @Option(
-        name: .long,
-        help: ArgumentHelp(
-            "Struct type to use.",
-            discussion: "If a template contains several possible template types, this option specifies which one to use."
-        )
-    )
-    var templateType: String?
-    
-    @Flag(
-        name: .long,
-        help: "Don't cache template file build."
-    )
-    var noUseCache = false
-    
-    @Option(
-        name: .shortAndLong,
         help: "Path to write out the resulting image instead of changing the icon.",
         completion: .file()
     )
@@ -97,22 +75,13 @@ struct TextCommand: AsyncParsableCommand {
     }
     
     private func buildTemplate() async throws -> Template<Input> {
-        if let template = template {
-            return try await Self.builder.build(
-                fileURL: try template.resolvedAsRelativePath,
-                useCache: !noUseCache,
-                templateType: templateType
+        Self.builder.build {
+            ImageTemplateView(
+                image: $0.0,
+                content: text
             )
-        } else {
-            return Self.builder.build {
-                ImageTemplateView(
-                    image: $0.0,
-                    content: text
-                )
-            }
         }
     }
-    
 }
 
 /// Text Template. Also the sample custom template, provided via PluginTemplate/Template-Template-swift.template
