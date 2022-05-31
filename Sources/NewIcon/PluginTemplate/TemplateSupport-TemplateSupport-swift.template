@@ -28,72 +28,72 @@ enum PreviewData {
     static let text = "Hello world"
 }
 
-public protocol _ImageTemplate {
-    init(image: NSImage, data: Data?) throws
+public protocol _IconTemplate {
+    init(icon: NSImage, data: Data?) throws
     
     var asAnyView: AnyView { get }
 }
 
-public protocol ImageTemplate: View, _ImageTemplate {
+public protocol IconTemplate: View, _IconTemplate {
     associatedtype Content
     
-    init(image: NSImage)
+    init(icon: NSImage)
     
-    init(image: NSImage, content: Content)
+    init(icon: NSImage, content: Content)
     
-    static func makePreview(image: NSImage) -> Self
+    static func makePreview(icon: NSImage) -> Self
 }
 
-public extension ImageTemplate where Content: Decodable {
+public extension IconTemplate where Content: Decodable {
     static var decoder: JSONDecoder {
         let decoder = JSONDecoder()
         decoder.allowsJSON5 = true
         return decoder
     }
     
-    init(image: NSImage) {
+    init(icon: NSImage) {
         fatalError("Template expects non-nil content.")
     }
     
-    init(image: NSImage, data: Data?) throws {
+    init(icon: NSImage, data: Data?) throws {
         guard let data = data else { throw "Template expects non-nil content." }
         let content = try Self.decoder.decode(Content.self, from: data)
-        self.init(image: image, content: content)
+        self.init(icon: icon, content: content)
     }
     
-    init<T>(image: NSImage, data: Data?) throws where Content == T? {
+    init<T>(icon: NSImage, data: Data?) throws where Content == T? {
         let content: Content
         if let data = data {
             content = try Self.decoder.decode(Content.self, from: data)
         } else {
             content = nil
         }
-        self.init(image: image, content: content)
+        self.init(icon: icon, content: content)
     }
 }
 
-public extension ImageTemplate where Content == Never {
-    init(image: NSImage, data: Data?) throws {
+public extension IconTemplate where Content == Never {
+    init(icon: NSImage, data: Data?) throws {
         guard data == nil else { throw "Template expects content to be nil." }
-        self.init(image: image)
+        self.init(icon: icon)
     }
     
-    init(image: NSImage, content: Content) {
+    init(icon: NSImage, content: Content) {
         fatalError("How did you get here?")
     }
 }
 
-extension ImageTemplate {
+extension IconTemplate {
     public var asAnyView: AnyView {
         AnyView(self)
     }
     
     static func makePreview(icon: PreviewData.Icon) -> Self {
-        makePreview(image: icon.image)
+        makePreview(icon: icon.image)
     }
 }
 
-internal extension ImageTemplate {
+internal extension IconTemplate {
     @ViewBuilder static func makeDefaultPreviews(factory: (PreviewData.Icon) -> Self) -> some View {
         Group {
             factory(.appIcon)
@@ -110,25 +110,25 @@ internal extension ImageTemplate {
     }
 }
 
-public extension ImageTemplate where Content == String {
-    static func makePreview(image: NSImage) -> Self {
-        .init(image: image, content: PreviewData.text)
+public extension IconTemplate where Content == String {
+    static func makePreview(icon: NSImage) -> Self {
+        .init(icon: icon, content: PreviewData.text)
     }
 }
 
-public extension ImageTemplate where Content == String? {
-    static func makePreview(image: NSImage) -> Self {
-        .init(image: image, content: PreviewData.text)
+public extension IconTemplate where Content == String? {
+    static func makePreview(icon: NSImage) -> Self {
+        .init(icon: icon, content: PreviewData.text)
     }
 }
 
-public extension ImageTemplate where Content == Never {
-    static func makePreview(image: NSImage) -> Self {
-        .init(image: image)
+public extension IconTemplate where Content == Never {
+    static func makePreview(icon: NSImage) -> Self {
+        .init(icon: icon)
     }
 }
 
-public extension ImageTemplate where Self: PreviewProvider {
+public extension IconTemplate where Self: PreviewProvider {
     static var previews: some View {
         makeDefaultPreviews(factory: makePreview(icon:))
     }
@@ -136,18 +136,18 @@ public extension ImageTemplate where Self: PreviewProvider {
 
 extension String: Error { }
 
-@_cdecl("isImageTemplate")
-public func isImageTemplate(type: Any) -> Bool {
-    type as? _ImageTemplate.Type != nil
+@_cdecl("isIconTemplate")
+public func isIconTemplate(type: Any) -> Bool {
+    type as? _IconTemplate.Type != nil
 }
 
-@_cdecl("renderImageTemplate")
+@_cdecl("renderIconTemplate")
 public func renderTemplate(type: Any, content: Any) -> Any {
     var result: Result<AnyView, Error>
     do {
-        guard let (image, data) = content as? (NSImage, Data?) else { throw "Incorrect renderTemplate arguments" }
-        guard let resolvedType = type as? _ImageTemplate.Type else { throw "Incorrect template type \(type)" }
-        result = .success(try resolvedType.init(image: image, data: data).asAnyView)
+        guard let (icon, data) = content as? (NSImage, Data?) else { throw "Incorrect renderIconTemplate arguments" }
+        guard let resolvedType = type as? _IconTemplate.Type else { throw "Incorrect template type \(type)" }
+        result = .success(try resolvedType.init(icon: icon, data: data).asAnyView)
     } catch {
         result = .failure(error)
     }

@@ -64,8 +64,8 @@ struct TemplateIconCommand: AsyncParsableCommand {
     private typealias Input = (NSImage, Data?)
     
     private static var builder = Template.Builder(
-        isTemplateSymbol: "isImageTemplate",
-        renderTemplateSymbol: "renderImageTemplate",
+        isTemplateSymbol: "isIconTemplate",
+        renderTemplateSymbol: "renderIconTemplate",
         renderTemplateInputType: Input.self
     )
     

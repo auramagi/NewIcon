@@ -77,7 +77,7 @@ struct TextCommand: AsyncParsableCommand {
     private func buildTemplate() async throws -> Template<Input> {
         Self.builder.build {
             ImageTemplateView(
-                image: $0.0,
+                icon: $0.0,
                 content: text
             )
         }
@@ -86,13 +86,13 @@ struct TextCommand: AsyncParsableCommand {
 
 /// Text Template. Also the sample custom template, provided via PluginTemplate/Template-Template-swift.template
 private struct ImageTemplateView: View {
-    let image: NSImage
+    let icon: NSImage
 
     let content: String
 
     // Expect size to be 1024x1024
     var body: some View {
-        Image(nsImage: image)
+        Image(nsImage: icon)
             .resizable()
             .scaledToFit()
             .overlay(
