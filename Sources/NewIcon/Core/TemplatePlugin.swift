@@ -30,6 +30,8 @@ struct TemplatePlugin {
     
     func openInXcode() throws {
         try Shell.executeSync("xed \(package.path)")
+        Thread.sleep(forTimeInterval: 1)
+        try Shell.executeSync("xed \(templateFile.path)")
     }
     
     func makeImage() async throws -> TemplateImage {
