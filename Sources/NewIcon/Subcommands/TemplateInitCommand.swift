@@ -18,6 +18,10 @@ struct TemplateInitCommand: AsyncParsableCommand {
         let fileURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent("Template.swift")
         
+        guard !FileManager.default.fileExists(atPath: fileURL.path) else {
+            throw "File already exists: \(fileURL.path)"
+        }
+        
         try Bundle.locateResourcesBundle()
             .template("PluginTemplate/Template-Template-swift")
             .write(to: fileURL, originalContentsURL: nil)
