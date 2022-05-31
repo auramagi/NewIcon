@@ -63,7 +63,7 @@ struct TextCommand: AsyncParsableCommand {
     )
     var output: String?
     
-    private typealias Input = (NSImage, Data)
+    private typealias Input = (NSImage, Data?)
     
     private static var builder = Template.Builder(
         isTemplateSymbol: "isImageTemplate",
@@ -107,7 +107,7 @@ struct TextCommand: AsyncParsableCommand {
             return Self.builder.build {
                 ImageTemplateView(
                     image: $0.0,
-                    content: try JSONDecoder().decode(String.self, from: $0.1)
+                    content: text
                 )
             }
         }

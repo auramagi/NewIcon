@@ -61,7 +61,7 @@ struct TemplateIconCommand: AsyncParsableCommand {
     )
     var output: String?
     
-    private typealias Input = (NSImage, Data)
+    private typealias Input = (NSImage, Data?)
     
     private static var builder = Template.Builder(
         isTemplateSymbol: "isImageTemplate",
@@ -83,7 +83,12 @@ struct TemplateIconCommand: AsyncParsableCommand {
         )
         
         do {
-            let data = try JSONEncoder().encode(content)
+            let data: Data?
+            if let content = content {
+                data = try JSONEncoder().encode(content)
+            } else {
+                data = nil
+            }
             let renderedTemplate = try template.render((icon.image, data))
             try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
         } catch {
