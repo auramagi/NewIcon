@@ -1,5 +1,5 @@
 //
-//  EditCommand.swift
+//  TemplateEditCommand.swift
 //  
 //
 //  Created by Mikhail Apurin on 09.05.2022.
@@ -8,8 +8,8 @@
 import ArgumentParser
 import Foundation
 
-struct EditCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+struct TemplateEditCommand: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
         commandName: "edit",
         abstract: "Edit a template file."
     )
@@ -23,6 +23,7 @@ struct EditCommand: AsyncParsableCommand {
     @MainActor func run() async throws {
         let fileURL = try path.resolvedAsRelativePath
         let plugin = try TemplatePlugin(fileURL: fileURL, installationURL: TemplatePlugin.InstallationURL.temporary)
+        try plugin.copyFiles()
         
         printExplanation(fileURL: fileURL, plugin: plugin)
         
@@ -42,6 +43,8 @@ struct EditCommand: AsyncParsableCommand {
         source.cancel()
         saveChanges(original: fileURL, temporary: plugin.templateFile)
         try plugin.cleanUp()
+        
+        print("Removed temporary swift package.")
     }
     
     func printExplanation(fileURL: URL, plugin: TemplatePlugin) {

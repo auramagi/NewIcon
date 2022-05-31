@@ -10,7 +10,7 @@ import ArgumentParser
 import Foundation
 
 struct ResetCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "reset",
         abstract: "Revert to the original icon."
     )
@@ -25,5 +25,7 @@ struct ResetCommand: AsyncParsableCommand {
         let targetFilePath = try path.resolvedAsRelativePath.path
         
         NSWorkspace.shared.setIcon(nil, forFile: targetFilePath)
+        
+        print("Reset icon for", targetFilePath)
     }
 }

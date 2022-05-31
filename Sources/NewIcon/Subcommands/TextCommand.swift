@@ -11,7 +11,7 @@ import Foundation
 import SwiftUI
 
 struct TextCommand: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "text",
         abstract: "Overlay text over the original icon."
     )
@@ -36,54 +36,21 @@ struct TextCommand: AsyncParsableCommand {
     
     @Option(
         name: .shortAndLong,
-        help: "Installed plugin name"
-    )
-    var plugin: String?
-    
-    @Option(
-        name: .shortAndLong,
-        help: "Path to template file.",
-        completion: .file()
-    )
-    var template: String?
-    
-    @Option(
-        name: .long,
-        help: ArgumentHelp(
-            "Struct type to use.",
-            discussion: "If a template contains several possible template types, this option specifies which one to use."
-        )
-    )
-    var templateType: String?
-    
-    @Option(
-        name: .shortAndLong,
         help: "Path to write out the resulting image instead of changing the icon.",
         completion: .file()
     )
     var output: String?
     
+    private typealias Input = (NSImage, Data?)
+    
     private static var builder = Template.Builder(
         isTemplateSymbol: "isImageTemplate",
         renderTemplateSymbol: "renderImageTemplate",
-        renderTemplateInputType: (NSImage, Data).self,
-        defaultTemplate: {
-            AnyView(
-                ImageTemplateView(
-                    image: $0.0,
-                    content: try JSONDecoder().decode(String.self, from: $0.1)
-                )
-            )
-        }
+        renderTemplateInputType: Input.self
     )
     
     @MainActor func run() async throws {
-        let template = try await Self.builder.build(
-            plugin: plugin,
-            fileURL: try template?.resolvedAsRelativePath,
-            installationURL: try TemplatePlugin.InstallationURL.temporary,
-            templateType: templateType
-        )
+        let template = try await buildTemplate()
         defer { template.cleanUp() }
         
         let icon = try Icon.load(
@@ -99,20 +66,33 @@ struct TextCommand: AsyncParsableCommand {
             icon.cleanUp()
             throw error
         }
+        
+        if output != nil {
+            print("Icon was successfully changed.")
+        } else {
+            print("Image was successfully saved.")
+        }
+    }
+    
+    private func buildTemplate() async throws -> Template<Input> {
+        Self.builder.build {
+            ImageTemplateView(
+                icon: $0.0,
+                content: text
+            )
+        }
     }
 }
 
-// MARK: - Default template
-
-// Default template. Synced to PluginTemplate/Template-Template-swift.template
+/// Text Template. Also the sample custom template, provided via PluginTemplate/Template-Template-swift.template
 private struct ImageTemplateView: View {
-    let image: NSImage
+    let icon: NSImage
 
     let content: String
 
     // Expect size to be 1024x1024
     var body: some View {
-        Image(nsImage: image)
+        Image(nsImage: icon)
             .resizable()
             .scaledToFit()
             .overlay(

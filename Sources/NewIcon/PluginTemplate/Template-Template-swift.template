@@ -1,14 +1,14 @@
 import SwiftUI
 import TemplateSupport
 
-struct ImageTemplateView: ImageTemplate, PreviewProvider {
-    let image: NSImage
+struct ImageTemplateView: IconTemplate, PreviewProvider {
+    let icon: NSImage
 
     let content: String
 
     // Expect size to be 1024x1024
     var body: some View {
-        Image(nsImage: image)
+        Image(nsImage: icon)
             .resizable()
             .scaledToFit()
             .overlay(
