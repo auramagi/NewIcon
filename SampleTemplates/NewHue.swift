@@ -17,7 +17,7 @@ struct NewHue: IconTemplate, PreviewProvider {
     // This function is needed to provide previews while using
     // a custom `Decodable` type for `content`
     static func makePreview(image: NSImage) -> NewHue {
-        .init(icon: image, content: .red) // minty green previews 🌱✨
+        .init(icon: image, content: .mint) // minty green previews 🌱✨
     }
     
     // Expect size to be 1024x1024
@@ -28,13 +28,6 @@ struct NewHue: IconTemplate, PreviewProvider {
             .hue(content.color)
     }
 }
-
-class Custom: JSONDecoder {
-    func decode(_ type: NewHue.HueColor.Type, from data: Data) throws -> NewHue.HueColor {
-        return .orange
-    }
-}
-
 
 extension NewHue.HueColor {
     var color: Color {
