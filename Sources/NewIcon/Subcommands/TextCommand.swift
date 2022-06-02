@@ -68,9 +68,9 @@ struct TextCommand: AsyncParsableCommand {
         }
         
         if output != nil {
-            print("Icon was successfully changed.")
-        } else {
             print("Image was successfully saved.")
+        } else {
+            print("Icon was successfully changed.")
         }
     }
     
