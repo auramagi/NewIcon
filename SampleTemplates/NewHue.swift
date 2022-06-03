@@ -1,7 +1,7 @@
 import SwiftUI
 import TemplateSupport
 
-/// Apply of the several supported colors as the new hue for the image
+/// Apply one of the several supported colors as the new hue for the image
 struct NewHue: IconTemplate, PreviewProvider {
     let icon: NSImage
     
@@ -61,5 +61,3 @@ extension View {
             .mask(self)
     }
 }
-
-
