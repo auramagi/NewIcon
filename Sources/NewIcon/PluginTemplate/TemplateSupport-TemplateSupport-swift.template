@@ -117,20 +117,20 @@ internal extension IconTemplate {
 }
 
 public extension IconTemplate where Content == String {
-    static func makePreview(icon: NSImage) -> Self {
-        .init(icon: icon, content: PreviewData.text)
+    static func makePreview(image: NSImage) -> Self {
+        .init(icon: image, content: PreviewData.text)
     }
 }
 
 public extension IconTemplate where Content == String? {
-    static func makePreview(icon: NSImage) -> Self {
-        .init(icon: icon, content: PreviewData.text)
+    static func makePreview(image: NSImage) -> Self {
+        .init(icon: image, content: PreviewData.text)
     }
 }
 
 public extension IconTemplate where Content == Never {
-    static func makePreview(icon: NSImage) -> Self {
-        .init(icon: icon)
+    static func makePreview(image: NSImage) -> Self {
+        .init(icon: image)
     }
 }
 
