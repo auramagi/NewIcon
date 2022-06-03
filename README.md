@@ -62,9 +62,9 @@ NewIcon allows you to edit a template file with Xcode by creating and opening a 
 ```sh
 $ new-icon template edit TEMPLATE
 ```
+  - Tip: Make sure `My Mac` is selected as build destination.
 
 ![Editing the sample template](./Assets/TemplateEdit.png)
-
 
 ### Clear build cache for templates
 
