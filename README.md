@@ -68,7 +68,7 @@ $ new-icon template edit TEMPLATE
 
 ### Clear build cache for templates
 
-Template files need to be built before they can be used. At the very least, this takes several seconds, so NewIcon caches build product inside `~/.new-icon/cache` to speed up any subsequent use of the same template. There is a small command to clear this cache.
+Template files need to be built before they can be used. At the very least, this takes several seconds, so NewIcon caches build products inside `~/.new-icon/cache` to speed up any subsequent use of the same template. There is a simple command to clear this cache.
 
 ```sh
 $ new-icon template cache clear
