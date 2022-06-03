@@ -1,9 +1,18 @@
 import SwiftUI
 import TemplateSupport
 
-struct ImageTemplateView: IconTemplate, PreviewProvider {
+/// Overlay text with a fixed-width semi-translucent background.
+struct TextOverlay: IconTemplate, PreviewProvider {
+    /// An image (icon) provided to the template.
     let icon: NSImage
 
+    /// Additional content. Content can be one of the following:
+    /// - `String` or `String?`
+    /// - Any `Decodable` type
+    ///   - In which case you need to provide sample content for previews by defining `static func makePreview(icon: NSImage) -> Self`
+    ///   - The type should be decodable with a `JSONDecoder`. You can customize the decoder by providing custom `static var decoder: JSONDecoder`
+    /// - `Never` if the template doesn't take any additional content
+    ///   - Configure by adding `typealias Content = Never`
     let content: String
 
     // Expect size to be 1024x1024

@@ -68,15 +68,15 @@ struct TextCommand: AsyncParsableCommand {
         }
         
         if output != nil {
-            print("Icon was successfully changed.")
-        } else {
             print("Image was successfully saved.")
+        } else {
+            print("Icon was successfully changed.")
         }
     }
     
     private func buildTemplate() async throws -> Template<Input> {
         Self.builder.build {
-            ImageTemplateView(
+            TextOverlay(
                 icon: $0.0,
                 content: text
             )
@@ -84,8 +84,9 @@ struct TextCommand: AsyncParsableCommand {
     }
 }
 
-/// Text Template. Also the sample custom template, provided via PluginTemplate/Template-Template-swift.template
-private struct ImageTemplateView: View {
+/// Overlay text with a fixed-width semi-translucent background.
+/// This is also the sample template we provide with `template init` via PluginTemplate/Template-Template-swift.template
+private struct TextOverlay: View {
     let icon: NSImage
 
     let content: String
