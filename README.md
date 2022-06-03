@@ -24,7 +24,7 @@ $ mint install auramagi/NewIcon
 $ new-icon text FILE TEXT
 
 # Add version number to Xcode app icon
-$ new-icon text /Applications/Xcode.app 13.3.1
+$ new-icon text /Applications/Xcode.app 13.4.1
 ```
   - Tip: when changing Xcode icon, don't forget about the Simulator icon! It's located inside the Xcode bundle: `/Applications/Xcode.app/Contents/Developer/Applications/Simulator.app`
 
