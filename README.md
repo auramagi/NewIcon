@@ -44,7 +44,7 @@ See [SampleTemplates folder](./SampleTemplates) for some inspiration.
 
 | File | Command | Output |
 |:--|:--|---|
-| [NewHue.swift](./SampleTemplates/NewHue.swift) | `new-icon template icon NewHue.swift /Applications/Xcode.app mint` | <img width=128 src=./Assets/NewHueSample.png> |
+| [NewHue.swift](./SampleTemplates/NewHue.swift) | `new-icon template icon NewHue.swift /Applications/Xcode.app red` | <img width=128 src=./Assets/NewHueSample.png> |
 | [Trash.swift](./SampleTemplates/Trash.swift) | `new-icon template icon Trash.swift /Applications/Xcode.app` | <img width=128 src=./Assets/TrashSample.png> |
  
 ### Create a sample template file
