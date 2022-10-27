@@ -17,7 +17,7 @@ public extension NewIcon {
     ///   - content: Optional template content
     ///   - templateType: The View type name in the template. Can be nil if the template contains only one View type
     ///   - noUseCache: Whether to skip using the build cache
-    static func applyTemplate(
+    @MainActor static func applyTemplate(
         url fileURL: URL,
         to output: Output,
         iconSource: IconSource,

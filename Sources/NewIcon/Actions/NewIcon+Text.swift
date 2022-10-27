@@ -16,7 +16,7 @@ public extension NewIcon {
     ///   - text: Text to apply over the icon
     ///   - output: Where to save the rendered image
     ///   - iconSource: Base icon source
-    static func applyText(
+    @MainActor static func applyText(
         _ text: String,
         to output: Output,
         iconSource: IconSource
