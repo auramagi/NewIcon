@@ -21,6 +21,6 @@ struct TemplateInitCommand: AsyncParsableCommand {
 
         try NewIcon.copyDefaultTemplate(to: fileURL)
                 
-        print("Saved a sample template file to", fileURL)
+        print("Saved a sample template file to", fileURL.path)
     }
 }
