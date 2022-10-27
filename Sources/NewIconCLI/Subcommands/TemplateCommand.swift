@@ -6,6 +6,8 @@
 //
 
 import ArgumentParser
+import Foundation
+import NewIcon
 
 struct TemplateCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(

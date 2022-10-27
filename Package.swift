@@ -7,19 +7,26 @@ let package = Package(
     name: "NewIcon",
     platforms: [.macOS(.v11)],
     products: [
-        .executable(name: "new-icon", targets: ["NewIcon"]),
+        .library(name: "NewIcon", targets: ["NewIcon"]),
+        .executable(name: "new-icon", targets: ["NewIconCLI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.2"),
     ],
     targets: [
-        .executableTarget(
+        .target(
             name: "NewIcon",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             resources: [
                 .copy("PluginTemplate"),
+            ]
+        ),
+        .executableTarget(
+            name: "NewIconCLI",
+            dependencies: [
+                "NewIcon"
             ]
         ),
     ]

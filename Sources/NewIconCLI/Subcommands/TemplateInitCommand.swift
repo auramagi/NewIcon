@@ -7,6 +7,7 @@
 
 import ArgumentParser
 import Foundation
+import NewIcon
 
 struct TemplateInitCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -17,15 +18,9 @@ struct TemplateInitCommand: AsyncParsableCommand {
     @MainActor func run() async throws {
         let fileURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
             .appendingPathComponent("Template.swift")
-        
-        guard !FileManager.default.fileExists(atPath: fileURL.path) else {
-            throw "File already exists: \(fileURL.path)"
-        }
-        
-        try Bundle.locateResourcesBundle()
-            .template("PluginTemplate/Template-Template-swift")
-            .write(to: fileURL, originalContentsURL: nil)
-        
+
+        try NewIcon.copyDefaultTemplate(to: fileURL)
+                
         print("Saved a sample template file to", fileURL)
     }
 }

@@ -7,6 +7,7 @@
 
 import ArgumentParser
 import Foundation
+import NewIcon
 
 struct TemplateCacheCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -25,8 +26,7 @@ struct TemplateCacheClearCommand: AsyncParsableCommand {
     )
     
     @MainActor func run() async throws {
-        try FileManager.default
-            .removeItemIfExists(at: TemplatePlugin.InstallationURL.permanentCommonURL)
+        try NewIcon.clearTemplateCache()
         
         print("File builds cache cleared.")
     }

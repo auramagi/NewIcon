@@ -8,6 +8,7 @@
 import ArgumentParser
 import AppKit
 import SwiftUI
+import NewIcon
 
 struct TemplateIconCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -61,41 +62,36 @@ struct TemplateIconCommand: AsyncParsableCommand {
     )
     var output: String?
     
-    private typealias Input = (NSImage, Data?)
-    
-    private static var builder = Template.Builder(
-        isTemplateSymbol: "isIconTemplate",
-        renderTemplateSymbol: "renderIconTemplate",
-        renderTemplateInputType: Input.self
-    )
-    
     @MainActor func run() async throws {
-        let template = try await Self.builder.build(
-            fileURL: try template.resolvedAsRelativePath,
-            useCache: !noUseCache,
-            templateType: templateType
+        try await NewIcon.applyTemplate(
+            url: try template.resolvedAsRelativePath,
+            to: try commandOutput,
+            iconSource: try iconSource,
+            content: content,
+            templateType: templateType,
+            noUseCache: noUseCache
         )
-        defer { template.cleanUp() }
-        
-        let icon = try Icon.load(
-            target:  try path.resolvedAsRelativePath,
-            imageURL: try image?.resolvedAsRelativePath
-        )
-        
-        do {
-            let data: Data?
-            if let content = content {
-                data = try JSONEncoder().encode(content)
-            } else {
-                data = nil
-            }
-            let renderedTemplate = try template.render((icon.image, data))
-            try icon.apply(renderedTemplate, to: try output?.resolvedAsRelativePath(checkExistence: false))
-        } catch {
-            icon.cleanUp()
-            throw error
-        }
         
         print("Template was successfully rendered.")
+    }
+
+    private var iconSource: NewIcon.IconSource {
+        get throws {
+            if let image {
+                return .imageFile(try image.resolvedAsRelativePath)
+            } else {
+                return .fileIcon(try path.resolvedAsRelativePath)
+            }
+        }
+    }
+
+    private var commandOutput: NewIcon.Output {
+        get throws {
+            if let output {
+                return .imageFile(try output.resolvedAsRelativePath(checkExistence: false))
+            } else {
+                return .fileIcon(try path.resolvedAsRelativePath)
+            }
+        }
     }
 }

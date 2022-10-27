@@ -10,55 +10,52 @@ import Foundation
 import SwiftUI
 
 struct Icon {
-    let target: URL
-    
     let image: NSImage
     
     let cleanUp: () -> Void
     
-    static let workspace: NSWorkspace = .shared
-    
-    func replace(with newImage: NSImage) {
-        Self.workspace.setIcon(newImage, forFile: target.path)
-    }
-    
-    func apply(_ renderedTemplate: AnyView, to output: URL?) throws {
+    func apply(_ renderedTemplate: AnyView, to output: NewIcon.Output) throws {
         let newImage = try renderedTemplate
             .frame(width: 1024, height: 1024)
             .colorScheme(.light)
             .ignoresSafeArea()
             .drawingGroup() // Make SwiftUI rasterize the view first
             .asNSImage()
-        
-        if let output = output {
-            try newImage.write(to: output)
-        } else {
-            replace(with: newImage)
+
+        switch output {
+        case let .fileIcon(fileURL):
+            NewIcon.setIcon(newImage, forFile: fileURL)
+
+        case let .imageFile(fileURL):
+            try newImage.write(to: fileURL)
         }
     }
 }
 
 extension Icon {
-    static func load(target: URL, imageURL: URL?) throws -> Icon {
-        if let imageURL = imageURL {
-            return try .provided(in: imageURL, target: target)
-        } else {
-            return try .extracted(from: target)
+    static func load(source: NewIcon.IconSource) throws -> Icon {
+        switch source {
+        case let .fileIcon(fileURL):
+            return try extracted(from: fileURL)
+
+        case let .imageFile(fileURL):
+            return try provided(in: fileURL)
         }
     }
     
-    static func provided(in fileURL: URL, target: URL) throws -> Self {
+    static func provided(in fileURL: URL) throws -> Self {
         let image = try NSImage(contentsOf: fileURL)
             .unwrapOrThrow("Could not load image at \(fileURL.path)")
         
         return .init(
-            target: target,
             image: image,
             cleanUp: { }
         )
     }
     
     static func extracted(from target: URL) throws -> Self {
+        let workspace = NSWorkspace.shared
+        
         // Cache old icon
         let oldIcon = workspace.icon(forFile: target.path)
         let cleanUp = { _ = workspace.setIcon(oldIcon, forFile: target.path) }
@@ -76,7 +73,6 @@ extension Icon {
             originalIcon.addRepresentation(bestRepresentation)
             
             return .init(
-                target: target,
                 image: originalIcon,
                 cleanUp: cleanUp
             )

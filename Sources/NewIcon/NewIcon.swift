@@ -1,14 +1,17 @@
-import ArgumentParser
+import Foundation
 
-@main
-struct NewIcon: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "new-icon",
-        abstract: "macOS icon customization",
-        subcommands: [
-            TextCommand.self,
-            ResetCommand.self,
-            TemplateCommand.self,
-        ]
-    )
+public enum NewIcon { }
+
+public extension NewIcon {
+    enum IconSource {
+        case fileIcon(URL)
+
+        case imageFile(URL)
+    }
+    
+    enum Output {
+        case fileIcon(URL)
+
+        case imageFile(URL)
+    }
 }

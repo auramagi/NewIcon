@@ -5,9 +5,9 @@
 //  Created by Mikhail Apurin on 28.04.2022.
 //
 
-import AppKit
 import ArgumentParser
 import Foundation
+import NewIcon
 
 struct ResetCommand: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
@@ -22,10 +22,10 @@ struct ResetCommand: AsyncParsableCommand {
     var path: String
     
     @MainActor func run() async throws {
-        let targetFilePath = try path.resolvedAsRelativePath.path
+        let fileURL = try path.resolvedAsRelativePath
+
+        NewIcon.resetIcon(forFile: fileURL)
         
-        NSWorkspace.shared.setIcon(nil, forFile: targetFilePath)
-        
-        print("Reset icon for", targetFilePath)
+        print("Reset icon for", fileURL)
     }
 }
